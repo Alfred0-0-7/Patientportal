@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedCare Hospital - Patient Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+        :root {
+            --bg: #f4f7f9;
+            --fg: #1a1f36;
+            --muted: #6b7280;
+            --accent: #0d9488;
+            --accent-light: #14b8a6;
+            --accent-dark: #0f766e;
+            --card: #ffffff;
+            --border: #e5e7eb;
+            --success: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+        }
+
+        * { font-family: 'DM Sans', sans-serif; }
+        h1, h2, h3, h4, .font-display { font-family: 'Space Grotesk', sans-serif; }
+        body { background: var(--bg); color: var(--fg); min-height: 100vh; }
+
+        .bg-pattern {
+            background-image: radial-gradient(ellipse at 0% 0%, rgba(13, 148, 136, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 100% 100%, rgba(13, 148, 136, 0.05) 0%, transparent 50%);
+        }
+
+        .btn-primary { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%); box-shadow: 0 4px 14px -3px rgba(13, 148, 136, 0.4); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px -5px rgba(13, 148, 136, 0.5); }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        .input-field { border: 2px solid var(--border); background: var(--card); transition: all 0.25s ease; }
+        .input-field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1); }
+
+        @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-up { animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        
+        @keyframes token-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); background: rgba(13, 148, 136, 0.15); } }
+        .token-updated { animation: token-pulse 0.4s ease; }
+
+        /* Chatbot Specific Styles */
+        .chat-container { height: 100%; display: flex; flex-direction: column; }
+        
+        @keyframes slideInUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .chat-message { animation: slideInUp 0.3s ease-out; }
+        
+        @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+        .bounce-subtle { animation: bounce-subtle 2s infinite; }
+
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+
+        .status-available { background: rgba(5, 150, 105, 0.1); color: #047857; }
+        .status-busy { background: rgba(217, 119, 6, 0.1); color: #b45309; }
+        
+        .toast { transform: translateY(100px); opacity: 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="min-h-screen flex">
+        <!-- Left Panel -->
+        <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden" style="background: linear-gradient(135deg, #0f766e 0%, #115e59 50%, #134e4a 100%);">
+            <div class="absolute inset-0 overflow-hidden">
+                <div class="absolute top-20 left-20 w-72 h-72 bg-teal-400/20 rounded-full blur-3xl"></div>
+                <div class="absolute bottom-20 right-20 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl"></div>
+            </div>
+            <div class="relative z-10 flex flex-col justify-center px-12 xl:px-20 text-white">
+                <div class="animate-fade-up" style="animation-delay: 0.1s;">
+                    <div class="flex items-center gap-3 mb-10">
+                        <div class="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/20">
+                            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        </div>
+                        <span class="text-2xl font-bold font-display tracking-tight">MedCare</span>
+                    </div>
+                </div>
+                <h1 class="text-4xl xl:text-5xl font-bold font-display mb-5 leading-tight animate-fade-up" style="animation-delay: 0.2s;">Your Health Journey<br><span class="text-teal-200">Starts Here</span></h1>
+                <p class="text-lg text-teal-100/90 mb-12 max-w-md animate-fade-up" style="animation-delay: 0.3s;">Access your medical records, track appointments, and connect with healthcare professionals seamlessly.</p>
+                <div class="grid grid-cols-3 gap-5 max-w-lg animate-fade-up" style="animation-delay: 0.4s;">
+                    <div class="text-center p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/10"><div class="text-3xl font-bold font-display">50+</div><div class="text-sm text-teal-200 mt-1">Departments</div></div>
+                    <div class="text-center p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/10"><div class="text-3xl font-bold font-display">200+</div><div class="text-sm text-teal-200 mt-1">Specialists</div></div>
+                    <div class="text-center p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/10"><div class="text-3xl font-bold font-display">50K+</div><div class="text-sm text-teal-200 mt-1">Patients</div></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Panel - Form -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 bg-pattern">
+            <div class="w-full max-w-md">
+                <div class="lg:hidden text-center mb-8 animate-fade-up">
+                    <div class="inline-flex items-center gap-2.5">
+                        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #0d9488, #0f766e);"><svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+                        <span class="text-xl font-bold font-display" style="color: var(--accent);">MedCare</span>
+                    </div>
+                </div>
+                <div class="bg-gray-100/80 p-1.5 rounded-2xl mb-8 animate-fade-up" style="animation-delay: 0.1s;">
+                    <div class="flex" role="tablist">
+                        <button id="loginTab" onclick="switchTab('login')" class="flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all bg-white shadow-sm text-gray-900" role="tab">Sign In</button>
+                        <button id="registerTab" onclick="switchTab('register')" class="flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all text-gray-500 hover:text-gray-700" role="tab">Register</button>
+                    </div>
+                </div>
+
+                <form id="loginForm" class="animate-fade-up" style="animation-delay: 0.2s;" onsubmit="event.preventDefault(); handleLogin();">
+                    <h2 class="text-2xl font-bold font-display mb-2">Welcome Back</h2>
+                    <p class="text-gray-500 mb-8">Enter your Patient ID to access your dashboard</p>
+                    <div class="space-y-5">
+                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Patient ID</label><input type="text" id="loginPatientId" placeholder="HMS-XXXX-XXXX" class="w-full px-4 py-3.5 rounded-xl input-field" required></div>
+                        <button type="submit" id="loginBtn" class="w-full py-4 rounded-xl btn-primary text-white font-semibold text-base">Sign In</button>
+                    </div>
+                    <div class="mt-8 text-center"><p class="text-gray-500 text-sm">Don't have an account? <button type="button" onclick="switchTab('register')" class="font-semibold hover:underline" style="color: var(--accent);">Register here</button></p></div>
+                </form>
+
+                <form id="registerForm" class="hidden" onsubmit="event.preventDefault(); handleRegister();">
+                    <h2 class="text-2xl font-bold font-display mb-2">Create Account</h2>
+                    <p class="text-gray-500 mb-6">Fill in your details to register</p>
+                    <div class="space-y-4 max-h-[55vh] overflow-y-auto scrollbar-thin pr-2">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1.5">First Name *</label><input type="text" id="regFirstName" class="w-full px-4 py-3 rounded-xl input-field text-sm" required></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Last Name *</label><input type="text" id="regLastName" class="w-full px-4 py-3 rounded-xl input-field text-sm" required></div>
+                        </div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Email Address *</label><input type="email" id="regEmail" class="w-full px-4 py-3 rounded-xl input-field text-sm" required></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Phone Number *</label><input type="tel" id="regPhone" class="w-full px-4 py-3 rounded-xl input-field text-sm" required></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Date of Birth *</label><input type="date" id="regDob" class="w-full px-4 py-3 rounded-xl input-field text-sm" required></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Gender *</label><select id="regGender" class="w-full px-4 py-3 rounded-xl input-field text-sm" required><option value="">Select</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Blood Group *</label><select id="regBloodGroup" class="w-full px-4 py-3 rounded-xl input-field text-sm" required><option value="">Select</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Address</label><textarea id="regAddress" rows="2" class="w-full px-4 py-3 rounded-xl input-field text-sm resize-none"></textarea></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Emergency Contact</label><input type="tel" id="regEmergencyContact" class="w-full px-4 py-3 rounded-xl input-field text-sm"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Allergies</label><input type="text" id="regAllergies" class="w-full px-4 py-3 rounded-xl input-field text-sm"></div>
+                        <button type="submit" id="registerBtn" class="w-full py-4 rounded-xl btn-primary text-white font-semibold text-base mt-2">Create Account</button>
+                    </div>
+                    <div class="mt-6 text-center"><p class="text-gray-500 text-sm">Already have an account? <button type="button" onclick="switchTab('login')" class="font-semibold hover:underline" style="color: var(--accent);">Sign in</button></p></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="hidden min-h-screen bg-pattern">
+        <header class="bg-white/80 backdrop-blur-lg border-b border-gray-200/50 sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 py-3">
+                <div class="flex items-center gap-6 sm:gap-8">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #0d9488, #0f766e);"><svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+                        <span class="text-lg font-bold font-display hidden sm:block" style="color: var(--accent);">MedCare</span>
+                    </div>
+                    <nav class="hidden md:flex items-center gap-1">
+                        <button onclick="showSection('overview')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900" data-section="overview">Overview</button>
+                        <button onclick="showSection('departments')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900" data-section="departments">Departments</button>
+                        <button onclick="showSection('prescriptions')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900" data-section="prescriptions">Prescriptions</button>
+                        <button onclick="showSection('labs')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900" data-section="labs">Lab Results</button>
+                    </nav>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="hidden sm:flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-xl">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold" style="background: linear-gradient(135deg, #14b8a6, #0d9488);" id="userAvatar">JD</div>
+                        <div class="text-sm"><div class="font-semibold text-gray-900 truncate max-w-[120px]" id="userName">John Doe</div><div class="text-xs text-gray-500" id="userIdDisplay">HMS-1234</div></div>
+                    </div>
+                    <button onclick="handleLogout()" class="p-2.5 hover:bg-gray-100 rounded-xl transition-colors" title="Logout"><svg class="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Mobile Navigation -->
+        <div class="md:hidden bg-white/80 backdrop-blur-lg border-b border-gray-200/50 px-4 py-2 overflow-x-auto scrollbar-thin sticky top-[57px] z-30">
+            <div class="flex gap-2">
+                <button onclick="showSection('overview')" class="nav-btn flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100" data-section="overview">Overview</button>
+                <button onclick="showSection('departments')" class="nav-btn flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium text-gray-600" data-section="departments">Departments</button>
+                <button onclick="showSection('prescriptions')" class="nav-btn flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium text-gray-600" data-section="prescriptions">Prescriptions</button>
+                <button onclick="showSection('labs')" class="nav-btn flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium text-gray-600" data-section="labs">Labs</button>
+            </div>
+        </div>
+
+        <main class="max-w-7xl mx-auto p-4 sm:p-6 pb-24">
+            <!-- Sections -->
+            <section id="overviewSection" class="section-content">
+                <div class="grid lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                            <div class="text-center mb-6">
+                                <div class="w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-4" style="background: linear-gradient(135deg, #14b8a6, #0d9488);" id="profileAvatar">JD</div>
+                                <h3 class="text-xl font-bold font-display" id="profileName">John Doe</h3>
+                                <p class="text-gray-500 text-sm mt-1" id="profileId">HMS-1234</p>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"><div class="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-teal-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg></div><div><div class="text-xs text-gray-500">Phone</div><div class="font-medium" id="profilePhone">-</div></div></div>
+                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"><div class="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-teal-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/></svg></div><div><div class="text-xs text-gray-500">Email</div><div class="font-medium text-sm" id="profileEmail">-</div></div></div>
+                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"><div class="w-10 h-10 bg-rose-50 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></div><div><div class="text-xs text-gray-500">Blood Group</div><div class="font-medium" id="profileBloodGroup">-</div></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="grid sm:grid-cols-3 gap-4">
+                            <div class="rounded-2xl p-5 text-white" style="background: linear-gradient(135deg, #0d9488, #0f766e);"><div class="text-3xl font-bold font-display" id="prescriptionCount">0</div><div class="text-sm opacity-90">Prescriptions</div></div>
+                            <div class="rounded-2xl p-5 text-white" style="background: linear-gradient(135deg, #0891b2, #0e7490);"><div class="text-3xl font-bold font-display" id="labCount">0</div><div class="text-sm opacity-90">Lab Results</div></div>
+                            <div class="rounded-2xl p-5 text-white" style="background: linear-gradient(135deg, #d97706, #b45309);"><div class="text-3xl font-bold font-display" id="medicineCount">0</div><div class="text-sm opacity-90">Medicines</div></div>
+                        </div>
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"><h3 class="text-lg font-bold font-display mb-4">Recent Activity</h3><div id="recentActivity" class="space-y-3"><div class="text-center py-8 text-gray-400">Loading...</div></div></div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="departmentsSection" class="section-content hidden">
+                <div class="mb-6"><h2 class="text-2xl font-bold font-display">Departments</h2><p class="text-gray-500">Select a department to view doctors</p></div>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="departmentList"></div>
+                <div id="doctorsSection" class="hidden mt-6">
+                    <button onclick="clearDeptSelection()" class="mb-4 text-sm text-teal-600 font-semibold flex items-center gap-1"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back to Departments</button>
+                    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4" id="doctorsList"></div>
+                </div>
+            </section>
+            <section id="prescriptionsSection" class="section-content hidden"><div class="mb-6"><h2 class="text-2xl font-bold font-display">Prescriptions</h2></div><div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4" id="prescriptionsList"></div></section>
+            <section id="labsSection" class="section-content hidden"><div class="mb-6"><h2 class="text-2xl font-bold font-display">Lab Results</h2></div><div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4" id="labsList"></div></section>
+        </main>
+
+        <!-- CHATBOT WIDGET -->
+        <div id="chatbot-widget" class="fixed bottom-6 right-6 z-50">
+            <div id="chat-window" class="hidden flex-col w-[360px] h-[520px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden mb-4" style="animation: slideInUp 0.3s ease-out;">
+                <div class="p-4 flex items-center gap-3 text-white" style="background: linear-gradient(135deg, #0d9488, #0f766e);">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v1a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                    </div>
+                    <div><h4 class="font-bold">Symptom Checker</h4><p class="text-xs text-teal-100">Find the right doctor</p></div>
+                </div>
+                <div id="chat-messages" class="flex-1 p-4 overflow-y-auto scrollbar-thin bg-gray-50 space-y-4"></div>
+                <div class="p-4 bg-white border-t border-gray-100">
+                    <form onsubmit="sendChatMessage(event)" class="flex items-center gap-2">
+                        <input type="text" id="chat-input" placeholder="Describe your symptoms..." class="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-teal-500 transition-colors" autocomplete="off">
+                        <button type="submit" class="p-3 rounded-xl bg-teal-600 hover:bg-teal-700 transition-colors"><svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg></button>
+                    </form>
+                </div>
+            </div>
+            <button onclick="toggleChat()" id="chat-toggle-btn" class="w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-white transition-transform hover:scale-105 active:scale-95" style="background: linear-gradient(135deg, #0d9488, #0f766e);" aria-label="Toggle Chat">
+                <svg id="chat-icon-open" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <svg id="chat-icon-close" class="w-7 h-7 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Token Modal -->
+    <div id="tokenModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onclick="closeTokenModal()">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 relative z-10 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold font-display">Doctor Status</h3>
+                <button onclick="closeTokenModal()" class="p-2 hover:bg-gray-100 rounded-xl"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+            </div>
+            <div id="tokenModalContent"></div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast fixed bottom-6 left-1/2 -translate-x-1/2 z-50"><div class="bg-gray-900 text-white px-5 py-3.5 rounded-xl shadow-lg flex items-center gap-3"><svg class="w-5 h-5 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg><span id="toastMessage" class="text-sm font-medium">Success!</span></div></div>
+
+    <script>
+        // ==========================================
+        // CONFIGURATION
+        // ==========================================
+        const CONFIG = {
+            SUPABASE_URL: 'https://qjxcszxslvkdsemyxlam.supabase.co',
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqeGNzenhzbHZrZHNlbXl4bGFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODQ2NzEsImV4cCI6MjA4NjY2MDY3MX0.gwXWYjmWhiWtVNTKkmKeuU3pc4cASrQ0gXUZUyo-Dr4',
+            EMAILJS_PUBLIC_KEY: 'jZFEIG4-zC1NsE2jE',
+            EMAILJS_SERVICE_ID: 'service_7fr698f',
+            EMAILJS_TEMPLATE_ID: 'patient_registration'
+        };
+
+        const supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+        if (typeof emailjs !== 'undefined') emailjs.init(CONFIG.EMAILJS_PUBLIC_KEY);
+
+        // ==========================================
+        // STATE & CACHE
+        // ==========================================
+        const AppState = { currentPatient: null, selectedDepartment: null, selectedDoctor: null, subscriptions: [], chatOpen: false, cachedDepartments: [] };
+        const El = {};
+
+        // ==========================================
+        // MEDICAL KNOWLEDGE BASE
+        // ==========================================
+        const MedicalKB = [
+            { keys: ['chest pain', 'heart', 'breath', 'cardiac', 'palpitation'], condition: 'Cardiovascular Issue', dept: 'Cardiology' },
+            { keys: ['headache', 'migraine', 'dizzy', 'seizure', 'numbness', 'memory'], condition: 'Neurological Issue', dept: 'Neurology' },
+            { keys: ['stomach', 'abdomen', 'digestion', 'vomit', 'nausea', 'ulcer'], condition: 'Gastrointestinal Issue', dept: 'General Medicine' },
+            { keys: ['fever', 'cough', 'cold', 'flu', 'throat', 'infection'], condition: 'General Infection', dept: 'General Medicine' },
+            { keys: ['skin', 'rash', 'itch', 'acne', 'eczema'], condition: 'Dermatological Issue', dept: 'Dermatology' },
+            { keys: ['bone', 'fracture', 'joint', 'knee', 'back pain', 'arthritis'], condition: 'Orthopedic Issue', dept: 'Orthopedics' },
+            { keys: ['eye', 'vision', 'blur', 'cataract'], condition: 'Ophthalmic Issue', dept: 'Ophthalmology' },
+            { keys: ['ear', 'hearing', 'nose', 'sinus'], condition: 'ENT Issue', dept: 'ENT' },
+            { keys: ['pregnancy', 'pregnant', 'period', 'menstrual'], condition: 'Gynecological Issue', dept: 'Gynecology' },
+            { keys: ['anxiety', 'depression', 'stress', 'mental', 'sleep'], condition: 'Mental Health Concern', dept: 'Psychiatry' },
+            { keys: ['child', 'baby', 'infant', 'pediatric'], condition: 'Pediatric Issue', dept: 'Pediatrics' }
+        ];
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Cache Elements
+            El.loginPage = document.getElementById('loginPage');
+            El.dashboard = document.getElementById('dashboard');
+            El.chatWindow = document.getElementById('chat-window');
+            El.chatMessages = document.getElementById('chat-messages');
+            El.chatInput = document.getElementById('chat-input');
+            El.chatIconOpen = document.getElementById('chat-icon-open');
+            El.chatIconClose = document.getElementById('chat-icon-close');
+            
+            initializeDepartments();
+            checkSavedSession();
+        });
+
+        function checkSavedSession() {
+            try {
+                const savedPatient = localStorage.getItem('medcare_patient');
+                if (savedPatient) {
+                    AppState.currentPatient = JSON.parse(savedPatient);
+                    showDashboard();
+                }
+            } catch (e) { localStorage.removeItem('medcare_patient'); }
+        }
+
+        // ==========================================
+        // CHATBOT LOGIC
+        // ==========================================
+        function toggleChat() {
+            AppState.chatOpen = !AppState.chatOpen;
+            El.chatWindow.classList.toggle('hidden', !AppState.chatOpen);
+            El.chatWindow.classList.toggle('flex', AppState.chatOpen);
+            El.chatIconOpen.classList.toggle('hidden', AppState.chatOpen);
+            El.chatIconClose.classList.toggle('hidden', !AppState.chatOpen);
+            
+            if (AppState.chatOpen && El.chatMessages.children.length === 0) {
+                addBotMessage("Hello! I am your medical assistant. Please describe your symptoms (e.g., 'I have a headache').");
+            }
+        }
+
+        function sendChatMessage(e) {
+            e.preventDefault();
+            const text = El.chatInput.value.trim();
+            if (!text) return;
+
+            addUserMessage(text);
+            El.chatInput.value = '';
+            
+            const typingId = showTypingIndicator();
+
+            setTimeout(() => {
+                removeTypingIndicator(typingId);
+                analyzeSymptoms(text);
+            }, 1200);
+        }
+
+        function analyzeSymptoms(text) {
+            const lowerText = text.toLowerCase();
+            let match = null;
+
+            for (const item of MedicalKB) {
+                if (item.keys.some(k => lowerText.includes(k))) {
+                    match = item;
+                    break;
+                }
+            }
+
+            if (match) {
+                addBotMessage(`It looks like a <strong>${match.condition}</strong>. Checking for doctors in <strong>${match.dept}</strong>...`, true);
+                fetchDoctorsForChat(match.dept);
+            } else {
+                addBotMessage("I couldn't identify a specific condition. I recommend visiting <strong>General Medicine</strong>.", true);
+            }
+        }
+
+        // UPDATED: Fetch doctors and render with buttons
+        async function fetchDoctorsForChat(deptName) {
+            try {
+                // Find Dept ID
+                const { data: dept, error: deptErr } = await supabaseClient
+                    .from('departments')
+                    .select('dept_id, name')
+                    .ilike('name', `%${deptName}%`)
+                    .limit(1)
+                    .single();
+
+                if (deptErr || !dept) {
+                    addBotMessage("I found the department, but couldn't retrieve details right now.");
+                    return;
+                }
+
+                // Find Doctors (Realtime will handle future updates, but we fetch fresh now)
+                const { data: doctors, error: docErr } = await supabaseClient
+                    .from('doctors')
+                    .select('name, qualification, status, current_token, last_token, doctor_id')
+                    .eq('dept_id', dept.dept_id);
+
+                if (docErr || !doctors || doctors.length === 0) {
+                    addBotMessage(`No doctors currently listed under ${dept.name}.`);
+                } else {
+                    const available = doctors.filter(d => d.status === 'available');
+                    let html = `<div class="mt-2 space-y-2">`;
+                    
+                    if (available.length > 0) {
+                        html += `<p class="text-xs text-green-700 font-semibold mb-2">${available.length} available:</p>`;
+                        available.forEach(d => {
+                            html += `
+                            <div class="bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="font-bold text-sm">${d.name}</p>
+                                        <p class="text-xs text-gray-500">${d.qualification || 'Specialist'}</p>
+                                    </div>
+                                    <span class="text-xs font-bold px-2 py-1 rounded bg-green-100 text-green-700">${d.current_token || 0}</span>
+                                </div>
+                                <div class="mt-2 flex gap-2">
+                                    <button onclick="showDoctorToken('${d.doctor_id}', '${d.name}', ${d.current_token || 0}, ${d.last_token || 0}, '${d.status}')" class="flex-1 text-center text-xs bg-teal-600 text-white py-1.5 rounded-md hover:bg-teal-700 transition-colors">View Token</button>
+                                    <button onclick="redirectToDepartment('${dept.dept_id}')" class="flex-1 text-center text-xs bg-gray-200 text-gray-700 py-1.5 rounded-md hover:bg-gray-300 transition-colors">Dept Page</button>
+                                </div>
+                            </div>`;
+                        });
+                    } else {
+                         html += `<p class="text-xs text-amber-700">No doctors currently available. Check the department page for full schedule.</p>`;
+                    }
+                    
+                    // Add "Go to Department" button at the bottom
+                    html += `</div>`;
+                    html += `<button onclick="redirectToDepartment('${dept.dept_id}')" class="mt-3 w-full text-center text-xs font-semibold text-teal-700 py-2 border border-teal-200 rounded-lg hover:bg-teal-50 transition-colors">View Full Department Schedule</button>`;
+                    
+                    addBotMessage(html, true);
+                }
+            } catch (err) {
+                console.error(err);
+                addBotMessage("Error connecting to database.");
+            }
+        }
+
+        function addUserMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'flex justify-end chat-message';
+            div.innerHTML = `<div class="bg-teal-600 text-white p-3 rounded-2xl rounded-br-sm shadow-sm max-w-[85%] text-sm">${text}</div>`;
+            El.chatMessages.appendChild(div);
+            scrollToBottom();
+        }
+
+        function addBotMessage(text, isHTML = false) {
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 chat-message';
+            const content = isHTML ? text : `<p>${text}</p>`;
+            div.innerHTML = `
+                <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-teal-500 to-teal-700">
+                    <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v1a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+                </div>
+                <div class="bg-white p-3 rounded-2xl rounded-bl-sm shadow-sm max-w-[85%] text-sm text-gray-700">${content}</div>`;
+            El.chatMessages.appendChild(div);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            const id = 'typing-' + Date.now();
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = 'flex gap-2 chat-message';
+            div.innerHTML = `
+                <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-teal-500 to-teal-700">
+                    <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v1a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/></svg>
+                </div>
+                <div class="bg-white p-3 rounded-2xl rounded-bl-sm shadow-sm">
+                    <div class="flex gap-1">
+                        <span class="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
+                        <span class="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s;"></span>
+                        <span class="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s;"></span>
+                    </div>
+                </div>`;
+            El.chatMessages.appendChild(div);
+            scrollToBottom();
+            return id;
+        }
+
+        function removeTypingIndicator(id) { document.getElementById(id)?.remove(); }
+        function scrollToBottom() { El.chatMessages.scrollTop = El.chatMessages.scrollHeight; }
+
+        // ==========================================
+        // REDIRECT & NAVIGATION LOGIC
+        // ==========================================
+        
+        // Called from Chatbot "Dept Page" button
+        function redirectToDepartment(deptId) {
+            // 1. Close chat
+            if(AppState.chatOpen) toggleChat();
+            
+            // 2. Switch to Department Section
+            showSection('departments');
+
+            // 3. Select the specific department (Load doctors)
+            // Timeout allows UI to render section first
+            setTimeout(() => {
+                selectDept(deptId);
+                showToast('Viewing doctors for selected department');
+            }, 100);
+        }
+
+
+        // ==========================================
+        // CORE PORTAL LOGIC
+        // ==========================================
+        function switchTab(tab) {
+            document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+            document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+            document.getElementById('loginTab').classList.toggle('bg-white', tab === 'login');
+            document.getElementById('loginTab').classList.toggle('shadow-sm', tab === 'login');
+            document.getElementById('registerTab').classList.toggle('bg-white', tab !== 'login');
+            document.getElementById('registerTab').classList.toggle('shadow-sm', tab !== 'login');
+        }
+
+        async function handleLogin() {
+            const pid = document.getElementById('loginPatientId').value.trim().toUpperCase();
+            if (!pid) return showToast('Enter Patient ID');
+            
+            const btn = document.getElementById('loginBtn');
+            btn.innerHTML = 'Signing In...';
+            btn.disabled = true;
+
+            try {
+                const { data, error } = await supabaseClient.from('patients').select('*').eq('patient_id', pid).single();
+                if (error || !data) return showToast('Invalid Patient ID', 'error');
+                
+                AppState.currentPatient = { patientId: data.patient_id, firstName: data.first_name, lastName: data.last_name, email: data.email, phone: data.phone, dob: data.dob, gender: data.gender, bloodGroup: data.blood_group };
+                localStorage.setItem('medcare_patient', JSON.stringify(AppState.currentPatient));
+                showDashboard();
+                showToast(`Welcome, ${data.first_name}!`);
+            } catch (e) { showToast('Login failed', 'error'); } 
+            finally { btn.innerHTML = 'Sign In'; btn.disabled = false; }
+        }
+
+        function showDashboard() {
+            El.loginPage.classList.add('hidden');
+            El.dashboard.classList.remove('hidden');
+            updatePatientInfo();
+            loadDashboardData();
+            showSection('overview');
+            setupSubscriptions(); // Setup Realtime
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('medcare_patient');
+            AppState.currentPatient = null;
+            El.dashboard.classList.add('hidden');
+            El.loginPage.classList.remove('hidden');
+            document.getElementById('loginPatientId').value = '';
+            showToast('Logged out');
+        }
+
+        function updatePatientInfo() {
+            const p = AppState.currentPatient;
+            if (!p) return;
+            const init = (p.firstName[0] + p.lastName[0]).toUpperCase();
+            document.getElementById('userAvatar').textContent = init;
+            document.getElementById('userName').textContent = `${p.firstName} ${p.lastName}`;
+            document.getElementById('userIdDisplay').textContent = p.patientId;
+            document.getElementById('profileAvatar').textContent = init;
+            document.getElementById('profileName').textContent = `${p.firstName} ${p.lastName}`;
+            document.getElementById('profileId').textContent = p.patientId;
+            document.getElementById('profilePhone').textContent = p.phone;
+            document.getElementById('profileEmail').textContent = p.email;
+            document.getElementById('profileBloodGroup').textContent = p.bloodGroup;
+        }
+
+        async function loadDashboardData() {
+            const pid = AppState.currentPatient.patientId;
+            const [rx, labs, meds] = await Promise.all([
+                supabaseClient.from('prescriptions').select('*').eq('patient_id', pid).order('date', { ascending: false }),
+                supabaseClient.from('lab_results').select('*').eq('patient_id', pid).order('date', { ascending: false }),
+                supabaseClient.from('medicines').select('*').eq('patient_id', pid).order('date', { ascending: false })
+            ]);
+            renderPrescriptions(rx.data || []);
+            renderLabs(labs.data || []);
+            renderMeds(meds.data || []);
+            loadRecentActivity();
+        }
+
+        function showSection(id) {
+            document.querySelectorAll('.section-content').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id + 'Section').classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('text-teal-600', 'font-bold'));
+            document.querySelector(`.nav-item[data-section="${id}"]`)?.classList.add('text-teal-600', 'font-bold');
+        }
+
+        // ==========================================
+        // REALTIME SUBSCRIPTIONS
+        // ==========================================
+        function setupSubscriptions() {
+            const pid = AppState.currentPatient.patientId;
+            
+            // 1. Patient Data Subscriptions
+            supabaseClient.channel('rx').on('postgres_changes', { event: '*', schema: 'public', table: 'prescriptions', filter: `patient_id=eq.${pid}` }, () => { loadDashboardData(); showToast('New Prescription Added'); }).subscribe();
+            supabaseClient.channel('labs').on('postgres_changes', { event: '*', schema: 'public', table: 'lab_results', filter: `patient_id=eq.${pid}` }, () => { loadDashboardData(); showToast('New Lab Result'); }).subscribe();
+
+            // 2. Doctor Updates Subscription (Global)
+            // Listens for ANY change on doctors table and updates UI if relevant
+            supabaseClient.channel('doctors-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'doctors' }, payload => {
+                    console.log("Doctor update received", payload);
+                    
+                    // If user is looking at a department, refresh that list
+                    if (AppState.selectedDepartment) {
+                        loadDoctorsForDept(AppState.selectedDepartment);
+                    }
+                    
+                    // If user has a specific doctor modal open, update it
+                    if (AppState.selectedDoctor && (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT')) {
+                         if (payload.new.doctor_id === AppState.selectedDoctor) {
+                             showDoctorToken(payload.new.doctor_id, payload.new.name, payload.new.current_token, payload.new.last_token, payload.new.status);
+                             showToast('Doctor status updated');
+                         }
+                    }
+                })
+                .subscribe();
+        }
+
+        // ==========================================
+        // RENDER FUNCTIONS
+        // ==========================================
+        function renderPrescriptions(data) {
+            document.getElementById('prescriptionCount').textContent = data.length;
+            document.getElementById('prescriptionsList').innerHTML = data.length ? data.map(d => `<div class="bg-white p-5 rounded-xl border"><div class="font-bold">${d.doctor_name}</div><div class="text-sm text-gray-500">${d.department}</div><div class="text-xs mt-2">${formatDate(d.date)}</div></div>`).join('') : '<div class="col-span-full text-center py-8 text-gray-400">No prescriptions</div>';
+        }
+        function renderLabs(data) {
+            document.getElementById('labCount').textContent = data.length;
+            document.getElementById('labsList').innerHTML = data.length ? data.map(d => `<div class="bg-white p-5 rounded-xl border"><div class="font-bold">${d.test_name}</div><div class="text-sm text-gray-500">${d.lab_name || 'Lab'}</div><div class="text-xs mt-2">${formatDate(d.date)}</div></div>`).join('') : '<div class="col-span-full text-center py-8 text-gray-400">No lab results</div>';
+        }
+        function renderMeds(data) {
+            document.getElementById('medicineCount').textContent = data.length;
+        }
+        async function loadRecentActivity() {
+            const pid = AppState.currentPatient.patientId;
+            const { data } = await supabaseClient.from('prescriptions').select('*').eq('patient_id', pid).order('date', { ascending: false }).limit(3);
+            const container = document.getElementById('recentActivity');
+            if (data && data.length) {
+                container.innerHTML = data.map(d => `<div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"><div class="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-teal-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div><div class="flex-1"><div class="font-medium">${d.doctor_name}</div><div class="text-xs text-gray-500">${d.department}</div></div><div class="text-xs text-gray-400">${formatDate(d.date)}</div></div>`).join('');
+            } else {
+                container.innerHTML = '<div class="text-center py-8 text-gray-400">No recent activity</div>';
+            }
+        }
+
+        // ==========================================
+        // DEPARTMENTS & DOCTORS
+        // ==========================================
+        async function initializeDepartments() {
+            const { data } = await supabaseClient.from('departments').select('*').order('name');
+            AppState.cachedDepartments = data || []; // Cache for later use
+            const container = document.getElementById('departmentList');
+            if (data) {
+                container.innerHTML = data.map(d => `<div onclick="selectDept('${d.dept_id}')" class="bg-white p-5 rounded-xl border cursor-pointer hover:border-teal-200 transition-colors"><div class="font-bold">${d.name}</div><div class="text-sm text-gray-500">View Doctors</div></div>`).join('');
+            }
+        }
+
+        async function selectDept(id) {
+            AppState.selectedDepartment = id;
+            document.getElementById('departmentList').classList.add('hidden');
+            document.getElementById('doctorsSection').classList.remove('hidden');
+            await loadDoctorsForDept(id);
+        }
+
+        async function loadDoctorsForDept(id) {
+            const { data: docs } = await supabaseClient.from('doctors').select('*').eq('dept_id', id);
+            const container = document.getElementById('doctorsList');
+            
+            if (docs && docs.length) {
+                container.innerHTML = docs.map(d => `
+                    <div class="bg-white p-5 rounded-xl border cursor-pointer hover:border-teal-200 transition-all hover:shadow-md" onclick="showDoctorToken('${d.doctor_id}', '${d.name}', ${d.current_token || 0}, ${d.last_token || 0}, '${d.status}')">
+                        <div class="flex justify-between items-start">
+                            <div><div class="font-bold">${d.name}</div><div class="text-sm text-gray-500">${d.qualification || 'Specialist'}</div></div>
+                            <span class="text-xs font-bold px-2 py-1 rounded ${d.status === 'available' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${d.status}</span>
+                        </div>
+                        <div class="mt-3 flex justify-between items-center text-xs text-gray-500">
+                            <span>Current Token: <strong class="text-teal-700">${d.current_token || 0}</strong></span>
+                            <button class="text-teal-600 font-semibold hover:underline">Details</button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<div class="col-span-full text-center py-8 text-gray-400">No doctors found</div>';
+            }
+        }
+
+        function clearDeptSelection() {
+            AppState.selectedDepartment = null;
+            document.getElementById('departmentList').classList.remove('hidden');
+            document.getElementById('doctorsSection').classList.add('hidden');
+        }
+
+        // ==========================================
+        // TOKEN MODAL
+        // ==========================================
+        function showDoctorToken(id, name, current, last, status) {
+            AppState.selectedDoctor = id;
+            document.getElementById('tokenModal').classList.remove('hidden');
+            document.getElementById('tokenModalContent').innerHTML = `
+                <div class="text-center mb-6">
+                    <div class="w-20 h-20 mx-auto bg-teal-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-3">${name.split(' ').map(n=>n[0]).join('')}</div>
+                    <h4 class="font-bold text-lg">${name}</h4>
+                    <p class="text-sm text-gray-500 mt-1">Status: <span class="font-bold ${status === 'available' ? 'text-green-600' : 'text-red-600'}">${status}</span></p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gray-50 p-4 rounded-xl text-center"><div class="text-3xl font-bold text-teal-600" id="currentTokenDisplay">${current}</div><div class="text-xs text-gray-500">Current Token</div></div>
+                    <div class="bg-gray-50 p-4 rounded-xl text-center"><div class="text-3xl font-bold">${last}</div><div class="text-xs text-gray-500">Last Token</div></div>
+                </div>
+                <div class="p-4 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-800">
+                    <p>Current queue status. Please wait for your token number.</p>
+                </div>
+            `;
+        }
+
+        function closeTokenModal() { 
+            document.getElementById('tokenModal').classList.add('hidden'); 
+            AppState.selectedDoctor = null;
+        }
+
+        // ==========================================
+        // UTILS
+        // ==========================================
+        function formatDate(d) { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        // Register Logic
+        async function handleRegister() {
+            const fields = {
+                firstName: document.getElementById('regFirstName').value.trim(),
+                lastName: document.getElementById('regLastName').value.trim(),
+                email: document.getElementById('regEmail').value.trim(),
+                phone: document.getElementById('regPhone').value.trim(),
+                dob: document.getElementById('regDob').value,
+                gender: document.getElementById('regGender').value,
+                bloodGroup: document.getElementById('regBloodGroup').value,
+                address: document.getElementById('regAddress').value.trim(),
+                emergencyContact: document.getElementById('regEmergencyContact').value.trim(),
+                allergies: document.getElementById('regAllergies').value.trim()
+            };
+
+            if (!fields.firstName || !fields.lastName || !fields.email || !fields.phone || !fields.dob || !fields.gender || !fields.bloodGroup) {
+                return showToast('Please fill all required fields', 'error');
+            }
+
+            const btn = document.getElementById('registerBtn');
+            btn.innerHTML = 'Creating...';
+            btn.disabled = true;
+
+            try {
+                const patientId = generatePatientId(fields.email);
+                const { data, error } = await supabaseClient.from('patients').insert([{
+                    patient_id: patientId,
+                    first_name: fields.firstName,
+                    last_name: fields.lastName,
+                    email: fields.email,
+                    phone: fields.phone,
+                    dob: fields.dob,
+                    gender: fields.gender,
+                    blood_group: fields.bloodGroup,
+                    address: fields.address,
+                    emergency_contact: fields.emergencyContact,
+                    allergies: fields.allergies
+                }]).select();
+
+                if (error) {
+                    showToast(error.message, 'error');
+                } else {
+                    showToast('Account created!');
+                    alert(`Success! Your Patient ID is: ${patientId}`);
+                    switchTab('login');
+                    document.getElementById('loginPatientId').value = patientId;
+                }
+            } catch (err) {
+                showToast('Registration failed', 'error');
+            } finally {
+                btn.innerHTML = 'Create Account';
+                btn.disabled = false;
+            }
+        }
+        
+        function generatePatientId(email) {
+            let hash = 0;
+            for (let i = 0; i < email.length; i++) {
+                const char = email.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            const positiveHash = Math.abs(hash);
+            const part1 = String(positiveHash % 10000).padStart(4, '0');
+            const part2 = String(Math.floor(positiveHash / 10000) % 10000).padStart(4, '0');
+            return `HMS-${part1}-${part2}`;
+        }
+    </script>
+</body>
+</html>
