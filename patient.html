@@ -8,784 +8,393 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #f4f7f9;
-            --fg: #1a1f36;
-            --muted: #6b7280;
-            --accent: #0d9488;
-            --accent-light: #14b8a6;
-            --accent-dark: #0f766e;
+            --bg: #f8fafb;
+            --fg: #0f172a;
+            --muted: #64748b;
+            --accent: #0891b2;
+            --accent-dark: #0e7490;
             --card: #ffffff;
-            --border: #e5e7eb;
-            --success: #059669;
-            --warning: #d97706;
-            --danger: #dc2626;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gradient-start: #06b6d4;
+            --gradient-end: #0891b2;
         }
 
-        * { font-family: 'DM Sans', sans-serif; }
-        h1, h2, h3, h4, .font-display { font-family: 'Space Grotesk', sans-serif; }
-        body { background: var(--bg); color: var(--fg); min-height: 100vh; }
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3, .font-display { font-family: 'Space Grotesk', sans-serif; }
+        body { background: var(--bg); color: var(--fg); }
 
-        .bg-pattern {
-            background-image: radial-gradient(ellipse at 0% 0%, rgba(13, 148, 136, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 100% 100%, rgba(13, 148, 136, 0.05) 0%, transparent 50%);
-        }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .gradient-text { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .btn-primary { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 40px -10px rgba(8, 145, 178, 0.5); }
+        .btn-secondary { background: white; border: 2px solid var(--border); transition: all 0.3s ease; }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+        .input-field { transition: all 0.3s ease; border: 2px solid var(--border); }
+        .input-field:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(8, 145, 178, 0.1); }
+        .card-hover { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); }
+        .pulse-dot { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .slide-up { animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; opacity: 0; transform: translateY(30px); }
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .token-update { animation: tokenPulse 0.5s ease; }
+        @keyframes tokenPulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); background: rgba(8, 145, 178, 0.2); } 100% { transform: scale(1); } }
+        .blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.5; animation: blob 10s ease-in-out infinite; }
+        @keyframes blob { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(30px, -30px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } }
+        .sidebar-item { transition: all 0.3s ease; }
+        .sidebar-item:hover, .sidebar-item.active { background: linear-gradient(135deg, rgba(8, 145, 178, 0.1), rgba(6, 182, 212, 0.1)); border-left: 3px solid var(--accent); }
+        .status-badge { animation: statusPulse 2s ease-in-out infinite; }
+        @keyframes statusPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); } }
+        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: skeleton 1.5s ease-in-out infinite; }
+        @keyframes skeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; } }
+        .hero-pattern { background-image: radial-gradient(circle at 20% 50%, rgba(8, 145, 178, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%), radial-gradient(circle at 40% 80%, rgba(14, 116, 144, 0.05) 0%, transparent 50%); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .btn-primary { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%); box-shadow: 0 4px 14px -3px rgba(13, 148, 136, 0.4); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px -5px rgba(13, 148, 136, 0.5); }
-        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
-        
-        .input-field { border: 2px solid var(--border); background: var(--card); transition: all 0.25s ease; }
-        .input-field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1); }
-
-        @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-up { animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
-        
-        @keyframes token-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); background: rgba(13, 148, 136, 0.15); } }
-        .token-updated { animation: token-pulse 0.4s ease; }
-
-        /* Chatbot Specific Styles */
-        .chat-container { height: 100%; display: flex; flex-direction: column; }
-        
-        @keyframes slideInUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .chat-message { animation: slideInUp 0.3s ease-out; }
-        
-        @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-        .bounce-subtle { animation: bounce-subtle 2s infinite; }
-
-        .scrollbar-thin::-webkit-scrollbar { width: 6px; }
-        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
-
-        .status-available { background: rgba(5, 150, 105, 0.1); color: #047857; }
-        .status-busy { background: rgba(217, 119, 6, 0.1); color: #b45309; }
-        
-        .toast { transform: translateY(100px); opacity: 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-        .toast.show { transform: translateY(0); opacity: 1; }
-
-        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+        /* Chatbot Styles */
+        .chatbot-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; }
+        .chat-window { width: 380px; height: 520px; background: white; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none; flex-direction: column; overflow: hidden; margin-bottom: 16px; border: 1px solid #e5e7eb; animation: slideUp 0.3s ease-out forwards; }
+        .chat-header { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; padding: 16px; display: flex; align-items: center; gap: 12px; }
+        .chat-body { flex: 1; overflow-y: auto; padding: 16px; background: #f8fafc; display: flex; flex-direction: column; gap: 12px; }
+        .chat-footer { padding: 16px; border-top: 1px solid #e5e7eb; background: white; }
+        .chat-input-group { display: flex; gap: 8px; }
+        .chat-message { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; position: relative; }
+        .bot-msg { background: white; border: 1px solid #e5e7eb; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .user-msg { background: var(--accent); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .chat-toggle-btn { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; border: none; box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+        .chat-toggle-btn:hover { transform: scale(1.05); }
+        .typing-indicator { display: flex; gap: 4px; padding: 10px 14px; background: white; border-radius: 12px; width: fit-content; border: 1px solid #e5e7eb; }
+        .typing-indicator span { width: 8px; height: 8px; background: #cbd5e1; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out; }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        .doc-card-chat { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-top: 8px; }
     </style>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
-<body>
+<body class="min-h-screen">
     <!-- Login Page -->
     <div id="loginPage" class="min-h-screen flex">
-        <!-- Left Panel -->
-        <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden" style="background: linear-gradient(135deg, #0f766e 0%, #115e59 50%, #134e4a 100%);">
-            <div class="absolute inset-0 overflow-hidden">
-                <div class="absolute top-20 left-20 w-72 h-72 bg-teal-400/20 rounded-full blur-3xl"></div>
-                <div class="absolute bottom-20 right-20 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl"></div>
-            </div>
-            <div class="relative z-10 flex flex-col justify-center px-12 xl:px-20 text-white">
-                <div class="animate-fade-up" style="animation-delay: 0.1s;">
-                    <div class="flex items-center gap-3 mb-10">
-                        <div class="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/20">
-                            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        <!-- Left Panel - Branding -->
+        <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-cyan-600 via-cyan-700 to-teal-800 relative overflow-hidden">
+            <div class="blob w-96 h-96 bg-cyan-400 top-10 left-10"></div>
+            <div class="blob w-72 h-72 bg-teal-400 bottom-20 right-20" style="animation-delay: -3s;"></div>
+            <div class="relative z-10 flex flex-col justify-center px-16 text-white">
+                <div class="slide-up" style="animation-delay: 0.1s;">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur">
+                            <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                         </div>
-                        <span class="text-2xl font-bold font-display tracking-tight">MedCare</span>
+                        <span class="text-2xl font-bold font-display">MedCare</span>
                     </div>
                 </div>
-                <h1 class="text-4xl xl:text-5xl font-bold font-display mb-5 leading-tight animate-fade-up" style="animation-delay: 0.2s;">Your Health Journey<br><span class="text-teal-200">Starts Here</span></h1>
-                <p class="text-lg text-teal-100/90 mb-12 max-w-md animate-fade-up" style="animation-delay: 0.3s;">Access your medical records, track appointments, and connect with healthcare professionals seamlessly.</p>
-                <div class="grid grid-cols-3 gap-5 max-w-lg animate-fade-up" style="animation-delay: 0.4s;">
-                    <div class="text-center p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/10"><div class="text-3xl font-bold font-display">50+</div><div class="text-sm text-teal-200 mt-1">Departments</div></div>
-                    <div class="text-center p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/10"><div class="text-3xl font-bold font-display">200+</div><div class="text-sm text-teal-200 mt-1">Specialists</div></div>
-                    <div class="text-center p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/10"><div class="text-3xl font-bold font-display">50K+</div><div class="text-sm text-teal-200 mt-1">Patients</div></div>
+                <h1 class="text-5xl font-bold font-display mb-6 slide-up" style="animation-delay: 0.2s;">Your Health,<br><span class="text-cyan-200">Our Priority</span></h1>
+                <p class="text-lg text-cyan-100 mb-12 slide-up" style="animation-delay: 0.3s;">Access your medical records, track appointments, and connect with healthcare professionals seamlessly.</p>
+                <div class="grid grid-cols-3 gap-6 slide-up" style="animation-delay: 0.4s;">
+                    <div class="text-center p-4 bg-white/10 rounded-2xl backdrop-blur"><div class="text-3xl font-bold">50+</div><div class="text-sm text-cyan-200">Departments</div></div>
+                    <div class="text-center p-4 bg-white/10 rounded-2xl backdrop-blur"><div class="text-3xl font-bold">200+</div><div class="text-sm text-cyan-200">Doctors</div></div>
+                    <div class="text-center p-4 bg-white/10 rounded-2xl backdrop-blur"><div class="text-3xl font-bold">50K+</div><div class="text-sm text-cyan-200">Patients</div></div>
                 </div>
             </div>
         </div>
         
         <!-- Right Panel - Form -->
-        <div class="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 bg-pattern">
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-8 hero-pattern">
             <div class="w-full max-w-md">
-                <div class="lg:hidden text-center mb-8 animate-fade-up">
-                    <div class="inline-flex items-center gap-2.5">
-                        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #0d9488, #0f766e);"><svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
-                        <span class="text-xl font-bold font-display" style="color: var(--accent);">MedCare</span>
-                    </div>
-                </div>
-                <div class="bg-gray-100/80 p-1.5 rounded-2xl mb-8 animate-fade-up" style="animation-delay: 0.1s;">
-                    <div class="flex" role="tablist">
-                        <button id="loginTab" onclick="switchTab('login')" class="flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all bg-white shadow-sm text-gray-900" role="tab">Sign In</button>
-                        <button id="registerTab" onclick="switchTab('register')" class="flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all text-gray-500 hover:text-gray-700" role="tab">Register</button>
+                <!-- Mobile Logo -->
+                <div class="lg:hidden text-center mb-8 slide-up">
+                    <div class="inline-flex items-center gap-2">
+                        <div class="w-12 h-12 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        </div>
+                        <span class="text-2xl font-bold font-display gradient-text">MedCare</span>
                     </div>
                 </div>
 
-                <form id="loginForm" class="animate-fade-up" style="animation-delay: 0.2s;" onsubmit="event.preventDefault(); handleLogin();">
+                <!-- Tab Switcher -->
+                <div class="bg-gray-100 p-1.5 rounded-2xl mb-8 slide-up" style="animation-delay: 0.1s;">
+                    <div class="flex">
+                        <button id="loginTab" class="flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all bg-white shadow text-gray-900">Sign In</button>
+                        <button id="registerTab" class="flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all text-gray-500">Register</button>
+                    </div>
+                </div>
+
+                <!-- Login Form -->
+                <div id="loginForm" class="slide-up" style="animation-delay: 0.2s;">
                     <h2 class="text-2xl font-bold font-display mb-2">Welcome Back</h2>
                     <p class="text-gray-500 mb-8">Enter your Patient ID to access your dashboard</p>
                     <div class="space-y-5">
-                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Patient ID</label><input type="text" id="loginPatientId" placeholder="HMS-XXXX-XXXX" class="w-full px-4 py-3.5 rounded-xl input-field" required></div>
-                        <button type="submit" id="loginBtn" class="w-full py-4 rounded-xl btn-primary text-white font-semibold text-base">Sign In</button>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-2">Patient ID</label><input type="text" id="loginPatientId" placeholder="HMS-XXXX-XXXX" class="w-full px-4 py-3.5 rounded-xl input-field outline-none bg-white"></div>
+                        <button onclick="handleLogin()" class="w-full py-4 rounded-xl btn-primary text-white font-semibold text-lg">Sign In</button>
                     </div>
-                    <div class="mt-8 text-center"><p class="text-gray-500 text-sm">Don't have an account? <button type="button" onclick="switchTab('register')" class="font-semibold hover:underline" style="color: var(--accent);">Register here</button></p></div>
-                </form>
+                    <div class="mt-8 text-center"><p class="text-gray-500 text-sm">Don't have an account? <button onclick="switchToRegister()" class="text-cyan-600 font-semibold hover:underline">Register here</button></p></div>
+                </div>
 
-                <form id="registerForm" class="hidden" onsubmit="event.preventDefault(); handleRegister();">
+                <!-- Register Form -->
+                <div id="registerForm" class="hidden">
                     <h2 class="text-2xl font-bold font-display mb-2">Create Account</h2>
                     <p class="text-gray-500 mb-6">Fill in your details to register</p>
-                    <div class="space-y-4 max-h-[55vh] overflow-y-auto scrollbar-thin pr-2">
+                    <div class="space-y-4 max-h-[60vh] overflow-y-auto scrollbar-hide pr-2">
                         <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1.5">First Name *</label><input type="text" id="regFirstName" class="w-full px-4 py-3 rounded-xl input-field text-sm" required></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Last Name *</label><input type="text" id="regLastName" class="w-full px-4 py-3 rounded-xl input-field text-sm" required></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1.5">First Name</label><input type="text" id="regFirstName" placeholder="John" class="w-full px-4 py-3 rounded-xl input-field outline-none bg-white text-sm"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Last Name</label><input type="text" id="regLastName" placeholder="Doe" class="w-full px-4 py-3 rounded-xl input-field outline-none bg-white text-sm"></div>
                         </div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Email Address *</label><input type="email" id="regEmail" class="w-full px-4 py-3 rounded-xl input-field text-sm" required></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Phone Number *</label><input type="tel" id="regPhone" class="w-full px-4 py-3 rounded-xl input-field text-sm" required></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Date of Birth *</label><input type="date" id="regDob" class="w-full px-4 py-3 rounded-xl input-field text-sm" required></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Gender *</label><select id="regGender" class="w-full px-4 py-3 rounded-xl input-field text-sm" required><option value="">Select</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Blood Group *</label><select id="regBloodGroup" class="w-full px-4 py-3 rounded-xl input-field text-sm" required><option value="">Select</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option></select></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Address</label><textarea id="regAddress" rows="2" class="w-full px-4 py-3 rounded-xl input-field text-sm resize-none"></textarea></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Emergency Contact</label><input type="tel" id="regEmergencyContact" class="w-full px-4 py-3 rounded-xl input-field text-sm"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Allergies</label><input type="text" id="regAllergies" class="w-full px-4 py-3 rounded-xl input-field text-sm"></div>
-                        <button type="submit" id="registerBtn" class="w-full py-4 rounded-xl btn-primary text-white font-semibold text-base mt-2">Create Account</button>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label><input type="email" id="regEmail" placeholder="john@example.com" class="w-full px-4 py-3 rounded-xl input-field outline-none bg-white text-sm"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label><input type="tel" id="regPhone" placeholder="+1 234 567 8900" class="w-full px-4 py-3 rounded-xl input-field outline-none bg-white text-sm"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Date of Birth</label><input type="date" id="regDob" class="w-full px-4 py-3 rounded-xl input-field outline-none bg-white text-sm"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Gender</label><select id="regGender" class="w-full px-4 py-3 rounded-xl input-field outline-none bg-white text-sm"><option value="">Select Gender</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Blood Group</label><select id="regBloodGroup" class="w-full px-4 py-3 rounded-xl input-field outline-none bg-white text-sm"><option value="">Select Blood Group</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Address</label><textarea id="regAddress" rows="2" placeholder="Enter your full address" class="w-full px-4 py-3 rounded-xl input-field outline-none bg-white text-sm resize-none"></textarea></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Emergency Contact</label><input type="tel" id="regEmergencyContact" placeholder="+1 234 567 8900" class="w-full px-4 py-3 rounded-xl input-field outline-none bg-white text-sm"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Allergies (if any)</label><input type="text" id="regAllergies" placeholder="Penicillin, Peanuts, etc." class="w-full px-4 py-3 rounded-xl input-field outline-none bg-white text-sm"></div>
+                        <button onclick="handleRegister()" class="w-full py-4 rounded-xl btn-primary text-white font-semibold text-lg mt-4">Create Account</button>
                     </div>
-                    <div class="mt-6 text-center"><p class="text-gray-500 text-sm">Already have an account? <button type="button" onclick="switchTab('login')" class="font-semibold hover:underline" style="color: var(--accent);">Sign in</button></p></div>
-                </form>
+                    <div class="mt-6 text-center"><p class="text-gray-500 text-sm">Already have an account? <button onclick="switchToLogin()" class="text-cyan-600 font-semibold hover:underline">Sign in</button></p></div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Main Dashboard -->
-    <div id="dashboard" class="hidden min-h-screen bg-pattern">
-        <header class="bg-white/80 backdrop-blur-lg border-b border-gray-200/50 sticky top-0 z-40">
-            <div class="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 py-3">
-                <div class="flex items-center gap-6 sm:gap-8">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #0d9488, #0f766e);"><svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
-                        <span class="text-lg font-bold font-display hidden sm:block" style="color: var(--accent);">MedCare</span>
+    <div id="dashboard" class="hidden min-h-screen bg-gray-50">
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-100 sticky top-0 z-50">
+            <div class="flex items-center justify-between px-6 py-4">
+                <div class="flex items-center gap-8">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        </div>
+                        <span class="text-xl font-bold font-display gradient-text">MedCare</span>
                     </div>
                     <nav class="hidden md:flex items-center gap-1">
-                        <button onclick="showSection('overview')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900" data-section="overview">Overview</button>
-                        <button onclick="showSection('departments')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900" data-section="departments">Departments</button>
-                        <button onclick="showSection('prescriptions')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900" data-section="prescriptions">Prescriptions</button>
-                        <button onclick="showSection('labs')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900" data-section="labs">Lab Results</button>
+                        <button onclick="showSection('overview')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-all" data-section="overview">Overview</button>
+                        <button onclick="showSection('departments')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-all" data-section="departments">Departments</button>
+                        <button onclick="showSection('prescriptions')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-all" data-section="prescriptions">Prescriptions</button>
+                        <button onclick="showSection('labs')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-all" data-section="labs">Lab Results</button>
+                        <button onclick="showSection('medicines')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-all" data-section="medicines">Medicines</button>
                     </nav>
                 </div>
-                <div class="flex items-center gap-3">
-                    <div class="hidden sm:flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-xl">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold" style="background: linear-gradient(135deg, #14b8a6, #0d9488);" id="userAvatar">JD</div>
-                        <div class="text-sm"><div class="font-semibold text-gray-900 truncate max-w-[120px]" id="userName">John Doe</div><div class="text-xs text-gray-500" id="userIdDisplay">HMS-1234</div></div>
+                <div class="flex items-center gap-4">
+                    <div class="hidden sm:flex items-center gap-3 px-4 py-2 bg-gray-50 rounded-xl">
+                        <div class="w-8 h-8 bg-gradient-to-br from-cyan-400 to-cyan-500 rounded-full flex items-center justify-center text-white text-sm font-semibold" id="userAvatar">JD</div>
+                        <div class="text-sm"><div class="font-semibold text-gray-900" id="userName">John Doe</div><div class="text-xs text-gray-500" id="userIdDisplay">HMS-1234-5678</div></div>
                     </div>
-                    <button onclick="handleLogout()" class="p-2.5 hover:bg-gray-100 rounded-xl transition-colors" title="Logout"><svg class="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+                    <button onclick="handleLogout()" class="p-2 hover:bg-gray-100 rounded-lg transition-all" title="Logout">
+                        <svg class="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </button>
                 </div>
             </div>
         </header>
 
         <!-- Mobile Navigation -->
-        <div class="md:hidden bg-white/80 backdrop-blur-lg border-b border-gray-200/50 px-4 py-2 overflow-x-auto scrollbar-thin sticky top-[57px] z-30">
+        <div class="md:hidden bg-white border-b border-gray-100 px-4 py-2 overflow-x-auto scrollbar-hide">
             <div class="flex gap-2">
-                <button onclick="showSection('overview')" class="nav-btn flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100" data-section="overview">Overview</button>
-                <button onclick="showSection('departments')" class="nav-btn flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium text-gray-600" data-section="departments">Departments</button>
-                <button onclick="showSection('prescriptions')" class="nav-btn flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium text-gray-600" data-section="prescriptions">Prescriptions</button>
-                <button onclick="showSection('labs')" class="nav-btn flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium text-gray-600" data-section="labs">Labs</button>
+                <button onclick="showSection('overview')" class="nav-btn flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium text-gray-600 bg-gray-100" data-section="overview">Overview</button>
+                <button onclick="showSection('departments')" class="nav-btn flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium text-gray-600" data-section="departments">Departments</button>
+                <button onclick="showSection('prescriptions')" class="nav-btn flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium text-gray-600" data-section="prescriptions">Prescriptions</button>
+                <button onclick="showSection('labs')" class="nav-btn flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium text-gray-600" data-section="labs">Labs</button>
+                <button onclick="showSection('medicines')" class="nav-btn flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium text-gray-600" data-section="medicines">Medicines</button>
             </div>
         </div>
 
-        <main class="max-w-7xl mx-auto p-4 sm:p-6 pb-24">
-            <!-- Sections -->
+        <!-- Main Content -->
+        <main class="p-6">
+            <!-- Overview Section -->
             <section id="overviewSection" class="section-content">
                 <div class="grid lg:grid-cols-3 gap-6">
+                    <!-- Profile Card -->
                     <div class="lg:col-span-1">
-                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover">
                             <div class="text-center mb-6">
-                                <div class="w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-4" style="background: linear-gradient(135deg, #14b8a6, #0d9488);" id="profileAvatar">JD</div>
+                                <div class="w-24 h-24 bg-gradient-to-br from-cyan-400 to-cyan-500 rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-4" id="profileAvatar">JD</div>
                                 <h3 class="text-xl font-bold font-display" id="profileName">John Doe</h3>
-                                <p class="text-gray-500 text-sm mt-1" id="profileId">HMS-1234</p>
+                                <p class="text-gray-500 text-sm" id="profileId">HMS-1234-5678</p>
                             </div>
-                            <div class="space-y-3">
-                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"><div class="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-teal-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg></div><div><div class="text-xs text-gray-500">Phone</div><div class="font-medium" id="profilePhone">-</div></div></div>
-                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"><div class="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-teal-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/></svg></div><div><div class="text-xs text-gray-500">Email</div><div class="font-medium text-sm" id="profileEmail">-</div></div></div>
-                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"><div class="w-10 h-10 bg-rose-50 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></div><div><div class="text-xs text-gray-500">Blood Group</div><div class="font-medium" id="profileBloodGroup">-</div></div></div>
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"><div class="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div><div><div class="text-xs text-gray-500">Phone</div><div class="font-medium" id="profilePhone">+1 234 567 8900</div></div></div>
+                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"><div class="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><div><div class="text-xs text-gray-500">Email</div><div class="font-medium text-sm" id="profileEmail">john@example.com</div></div></div>
+                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"><div class="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div><div class="text-xs text-gray-500">Gender / Age</div><div class="font-medium" id="profileGenderAge">Male, 32 years</div></div></div>
+                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"><div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></div><div><div class="text-xs text-gray-500">Blood Group</div><div class="font-medium" id="profileBloodGroup">O+</div></div></div>
                             </div>
                         </div>
                     </div>
+                    <!-- Quick Stats & Activity -->
                     <div class="lg:col-span-2 space-y-6">
                         <div class="grid sm:grid-cols-3 gap-4">
-                            <div class="rounded-2xl p-5 text-white" style="background: linear-gradient(135deg, #0d9488, #0f766e);"><div class="text-3xl font-bold font-display" id="prescriptionCount">0</div><div class="text-sm opacity-90">Prescriptions</div></div>
-                            <div class="rounded-2xl p-5 text-white" style="background: linear-gradient(135deg, #0891b2, #0e7490);"><div class="text-3xl font-bold font-display" id="labCount">0</div><div class="text-sm opacity-90">Lab Results</div></div>
-                            <div class="rounded-2xl p-5 text-white" style="background: linear-gradient(135deg, #d97706, #b45309);"><div class="text-3xl font-bold font-display" id="medicineCount">0</div><div class="text-sm opacity-90">Medicines</div></div>
+                            <div class="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl p-5 text-white card-hover"><div class="flex items-center justify-between mb-3"><div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div></div><div class="text-3xl font-bold" id="prescriptionCount">0</div><div class="text-sm text-cyan-100">Prescriptions</div></div>
+                            <div class="bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl p-5 text-white card-hover"><div class="flex items-center justify-between mb-3"><div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6v11a4 4 0 0 1-4 4 4 4 0 0 1-4-4V3Z"/></svg></div></div><div class="text-3xl font-bold" id="labCount">0</div><div class="text-sm text-teal-100">Lab Results</div></div>
+                            <div class="bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl p-5 text-white card-hover"><div class="flex items-center justify-between mb-3"><div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div></div><div class="text-3xl font-bold" id="medicineCount">0</div><div class="text-sm text-amber-100">Medicines</div></div>
                         </div>
-                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"><h3 class="text-lg font-bold font-display mb-4">Recent Activity</h3><div id="recentActivity" class="space-y-3"><div class="text-center py-8 text-gray-400">Loading...</div></div></div>
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"><h3 class="text-lg font-bold font-display mb-4">Recent Activity</h3><div class="space-y-4" id="recentActivity"><div class="text-center py-8 text-gray-500"><svg class="w-12 h-12 mx-auto mb-3 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><p class="text-sm">Loading activity...</p></div></div></div>
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"><h3 class="text-lg font-bold font-display mb-4">Active Consultations</h3><div id="activeConsultations" class="space-y-4"><div class="text-center py-8 text-gray-500"><svg class="w-12 h-12 mx-auto mb-3 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><p class="text-sm">Loading consultations...</p></div></div></div>
                     </div>
                 </div>
             </section>
-            
+
+            <!-- Departments Section -->
             <section id="departmentsSection" class="section-content hidden">
-                <div class="mb-6"><h2 class="text-2xl font-bold font-display">Departments</h2><p class="text-gray-500">Select a department to view doctors</p></div>
-                <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="departmentList"></div>
-                <div id="doctorsSection" class="hidden mt-6">
-                    <button onclick="clearDeptSelection()" class="mb-4 text-sm text-teal-600 font-semibold flex items-center gap-1"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back to Departments</button>
+                <div class="mb-6"><h2 class="text-2xl font-bold font-display">Departments & Doctors</h2><p class="text-gray-500">Select a department to view available doctors and current token status</p></div>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8" id="departmentList"></div>
+                <div id="doctorsSection" class="hidden">
+                    <div class="flex items-center gap-4 mb-6"><button onclick="clearDepartmentSelection()" class="p-2 hover:bg-gray-100 rounded-lg transition-all"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button><h3 class="text-xl font-bold font-display" id="selectedDepartmentName">Cardiology</h3></div>
                     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4" id="doctorsList"></div>
                 </div>
-            </section>
-            <section id="prescriptionsSection" class="section-content hidden"><div class="mb-6"><h2 class="text-2xl font-bold font-display">Prescriptions</h2></div><div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4" id="prescriptionsList"></div></section>
-            <section id="labsSection" class="section-content hidden"><div class="mb-6"><h2 class="text-2xl font-bold font-display">Lab Results</h2></div><div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4" id="labsList"></div></section>
-        </main>
-
-        <!-- CHATBOT WIDGET -->
-        <div id="chatbot-widget" class="fixed bottom-6 right-6 z-50">
-            <div id="chat-window" class="hidden flex-col w-[360px] h-[520px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden mb-4" style="animation: slideInUp 0.3s ease-out;">
-                <div class="p-4 flex items-center gap-3 text-white" style="background: linear-gradient(135deg, #0d9488, #0f766e);">
-                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v1a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-                    </div>
-                    <div><h4 class="font-bold">Symptom Checker</h4><p class="text-xs text-teal-100">Find the right doctor</p></div>
+                <!-- Token Status Modal -->
+                <div id="tokenModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div class="bg-white rounded-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto"><div class="flex items-center justify-between mb-6"><h3 class="text-xl font-bold font-display">Doctor Status</h3><button onclick="closeTokenModal()" class="p-2 hover:bg-gray-100 rounded-lg"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div><div id="tokenModalContent"></div></div>
                 </div>
-                <div id="chat-messages" class="flex-1 p-4 overflow-y-auto scrollbar-thin bg-gray-50 space-y-4"></div>
-                <div class="p-4 bg-white border-t border-gray-100">
-                    <form onsubmit="sendChatMessage(event)" class="flex items-center gap-2">
-                        <input type="text" id="chat-input" placeholder="Describe your symptoms..." class="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-teal-500 transition-colors" autocomplete="off">
-                        <button type="submit" class="p-3 rounded-xl bg-teal-600 hover:bg-teal-700 transition-colors"><svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg></button>
+            </section>
+
+            <!-- Prescriptions Section -->
+            <section id="prescriptionsSection" class="section-content hidden"><div class="mb-6"><h2 class="text-2xl font-bold font-display">Prescriptions</h2><p class="text-gray-500">View and download your prescription history</p></div><div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4" id="prescriptionsList"></div></section>
+            <!-- Labs Section -->
+            <section id="labsSection" class="section-content hidden"><div class="mb-6"><h2 class="text-2xl font-bold font-display">Lab Results</h2><p class="text-gray-500">View and download your laboratory test results</p></div><div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4" id="labsList"></div></section>
+            <!-- Medicines Section -->
+            <section id="medicinesSection" class="section-content hidden"><div class="mb-6"><h2 class="text-2xl font-bold font-display">Medicine History</h2><p class="text-gray-500">View medicines purchased from the hospital</p></div><div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50 border-b border-gray-100"><tr><th class="text-left py-4 px-6 font-semibold text-sm text-gray-600">Medicine</th><th class="text-left py-4 px-6 font-semibold text-sm text-gray-600">Dosage</th><th class="text-left py-4 px-6 font-semibold text-sm text-gray-600">Quantity</th><th class="text-left py-4 px-6 font-semibold text-sm text-gray-600">Date</th><th class="text-left py-4 px-6 font-semibold text-sm text-gray-600">Status</th></tr></thead><tbody id="medicinesTableBody"></tbody></table></div></div></section>
+        </main>
+        
+        <!-- CHATBOT WIDGET -->
+        <div id="chatbot-widget" class="chatbot-container">
+            <div id="chat-window" class="chat-window">
+                <div class="chat-header">
+                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v1a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold">MedAssist</h4>
+                        <p class="text-xs opacity-80">Symptom Checker & Guide</p>
+                    </div>
+                </div>
+                <div id="chat-body" class="chat-body scrollbar-hide">
+                    <!-- Messages will be injected here -->
+                </div>
+                <div class="chat-footer">
+                    <form id="chat-form" class="chat-input-group">
+                        <input type="text" id="chat-input" placeholder="Describe your symptoms..." class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-cyan-500" autocomplete="off">
+                        <button type="submit" class="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        </button>
                     </form>
                 </div>
             </div>
-            <button onclick="toggleChat()" id="chat-toggle-btn" class="w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-white transition-transform hover:scale-105 active:scale-95" style="background: linear-gradient(135deg, #0d9488, #0f766e);" aria-label="Toggle Chat">
+            <button id="chat-toggle-btn" class="chat-toggle-btn" onclick="toggleChatbot()">
                 <svg id="chat-icon-open" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                <svg id="chat-icon-close" class="w-7 h-7 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                <svg id="chat-icon-close" class="w-7 h-7 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
         </div>
+
     </div>
 
-    <!-- Token Modal -->
-    <div id="tokenModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onclick="closeTokenModal()">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 relative z-10 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-bold font-display">Doctor Status</h3>
-                <button onclick="closeTokenModal()" class="p-2 hover:bg-gray-100 rounded-xl"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-            </div>
-            <div id="tokenModalContent"></div>
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <div class="bg-gray-900 text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3">
+            <svg class="w-5 h-5 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+            <span id="toastMessage">Success!</span>
         </div>
     </div>
 
-    <!-- Toast -->
-    <div id="toast" class="toast fixed bottom-6 left-1/2 -translate-x-1/2 z-50"><div class="bg-gray-900 text-white px-5 py-3.5 rounded-xl shadow-lg flex items-center gap-3"><svg class="w-5 h-5 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg><span id="toastMessage" class="text-sm font-medium">Success!</span></div></div>
-
     <script>
-        // ==========================================
-        // CONFIGURATION
-        // ==========================================
-        const CONFIG = {
-            SUPABASE_URL: 'https://qjxcszxslvkdsemyxlam.supabase.co',
-            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqeGNzenhzbHZrZHNlbXl4bGFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODQ2NzEsImV4cCI6MjA4NjY2MDY3MX0.gwXWYjmWhiWtVNTKkmKeuU3pc4cASrQ0gXUZUyo-Dr4',
-            EMAILJS_PUBLIC_KEY: 'jZFEIG4-zC1NsE2jE',
-            EMAILJS_SERVICE_ID: 'service_7fr698f',
-            EMAILJS_TEMPLATE_ID: 'patient_registration'
-        };
+        // ====================
+        // SUPABASE CONFIGURATION
+        // ====================
+        const SUPABASE_URL = 'https://qjxcszxslvkdsemyxlam.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqeGNzenhzbHZrZHNlbXl4bGFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODQ2NzEsImV4cCI6MjA4NjY2MDY3MX0.gwXWYjmWhiWtVNTKkmKeuU3pc4cASrQ0gXUZUyo-Dr4';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-        if (typeof emailjs !== 'undefined') emailjs.init(CONFIG.EMAILJS_PUBLIC_KEY);
+        // ====================
+        // EMAILJS CONFIGURATION
+        // ====================
+        const EMAILJS_PUBLIC_KEY = 'jZFEIG4-zC1NsE2jE';
+        const EMAILJS_SERVICE_ID = 'service_7fr698f';
+        const EMAILJS_TEMPLATE_ID = 'patient_registration';
+        (function() { emailjs.init(EMAILJS_PUBLIC_KEY); })();
 
-        // ==========================================
-        // STATE & CACHE
-        // ==========================================
-        const AppState = { currentPatient: null, selectedDepartment: null, selectedDoctor: null, subscriptions: [], chatOpen: false, cachedDepartments: [] };
-        const El = {};
-
-        // ==========================================
-        // MEDICAL KNOWLEDGE BASE
-        // ==========================================
-        const MedicalKB = [
-            { keys: ['chest pain', 'heart', 'breath', 'cardiac', 'palpitation'], condition: 'Cardiovascular Issue', dept: 'Cardiology' },
-            { keys: ['headache', 'migraine', 'dizzy', 'seizure', 'numbness', 'memory'], condition: 'Neurological Issue', dept: 'Neurology' },
-            { keys: ['stomach', 'abdomen', 'digestion', 'vomit', 'nausea', 'ulcer'], condition: 'Gastrointestinal Issue', dept: 'General Medicine' },
-            { keys: ['fever', 'cough', 'cold', 'flu', 'throat', 'infection'], condition: 'General Infection', dept: 'General Medicine' },
-            { keys: ['skin', 'rash', 'itch', 'acne', 'eczema'], condition: 'Dermatological Issue', dept: 'Dermatology' },
-            { keys: ['bone', 'fracture', 'joint', 'knee', 'back pain', 'arthritis'], condition: 'Orthopedic Issue', dept: 'Orthopedics' },
-            { keys: ['eye', 'vision', 'blur', 'cataract'], condition: 'Ophthalmic Issue', dept: 'Ophthalmology' },
-            { keys: ['ear', 'hearing', 'nose', 'sinus'], condition: 'ENT Issue', dept: 'ENT' },
-            { keys: ['pregnancy', 'pregnant', 'period', 'menstrual'], condition: 'Gynecological Issue', dept: 'Gynecology' },
-            { keys: ['anxiety', 'depression', 'stress', 'mental', 'sleep'], condition: 'Mental Health Concern', dept: 'Psychiatry' },
-            { keys: ['child', 'baby', 'infant', 'pediatric'], condition: 'Pediatric Issue', dept: 'Pediatrics' }
+        // ====================
+        // STATE MANAGEMENT
+        // ====================
+        let currentPatient = null;
+        let selectedDepartment = null;
+        let selectedDoctor = null;
+        let tokenSubscription = null;
+        let doctorSubscription = null; // For realtime updates in chatbot
+        
+        // Medical Knowledge Base for Chatbot
+        const medicalKnowledge = [
+            { keywords: ['chest pain', 'heart attack', 'breath', 'cardiac', 'palpitation'], condition: 'Cardiovascular Issue', dept: 'Cardiology' },
+            { keywords: ['headache', 'migraine', 'dizzy', 'seizure', 'numbness', 'memory loss'], condition: 'Neurological Issue', dept: 'Neurology' },
+            { keywords: ['stomach', 'abdomen', 'digestion', 'ulcer', 'nausea', 'vomit'], condition: 'Gastrointestinal Issue', dept: 'General Medicine' },
+            { keywords: ['fever', 'cough', 'cold', 'flu', 'throat', 'infection'], condition: 'General Infection', dept: 'General Medicine' },
+            { keywords: ['skin', 'rash', 'itch', 'acne', 'eczema', 'psoriasis'], condition: 'Dermatological Issue', dept: 'Dermatology' },
+            { keywords: ['bone', 'fracture', 'joint', 'knee', 'back pain', 'arthritis', 'shoulder'], condition: 'Orthopedic Issue', dept: 'Orthopedics' },
+            { keywords: ['eye', 'vision', 'blur', 'glasses', 'cataract'], condition: 'Ophthalmic Issue', dept: 'Ophthalmology' },
+            { keywords: ['ear', 'hearing', 'nose', 'sinus', 'throat'], condition: 'ENT Issue', dept: 'ENT' },
+            { keywords: ['pregnancy', 'pregnant', 'period', 'menstrual', 'ovary'], condition: 'Gynecological Issue', dept: 'Gynecology' },
+            { keywords: ['anxiety', 'depression', 'stress', 'mental', 'sleep', 'insomnia'], condition: 'Mental Health Concern', dept: 'Psychiatry' },
+            { keywords: ['child', 'baby', 'infant', 'kid'], condition: 'Pediatric Issue', dept: 'Pediatrics' }
         ];
 
-        // ==========================================
+        // ====================
         // INITIALIZATION
-        // ==========================================
+        // ====================
         document.addEventListener('DOMContentLoaded', () => {
-            // Cache Elements
-            El.loginPage = document.getElementById('loginPage');
-            El.dashboard = document.getElementById('dashboard');
-            El.chatWindow = document.getElementById('chat-window');
-            El.chatMessages = document.getElementById('chat-messages');
-            El.chatInput = document.getElementById('chat-input');
-            El.chatIconOpen = document.getElementById('chat-icon-open');
-            El.chatIconClose = document.getElementById('chat-icon-close');
-            
+            console.log('Patient portal initialized');
             initializeDepartments();
+            setupTabListeners();
             checkSavedSession();
+            setupChatbot();
         });
 
         function checkSavedSession() {
             try {
                 const savedPatient = localStorage.getItem('medcare_patient');
                 if (savedPatient) {
-                    AppState.currentPatient = JSON.parse(savedPatient);
+                    currentPatient = JSON.parse(savedPatient);
                     showDashboard();
                 }
             } catch (e) { localStorage.removeItem('medcare_patient'); }
         }
 
-        // ==========================================
-        // CHATBOT LOGIC
-        // ==========================================
-        function toggleChat() {
-            AppState.chatOpen = !AppState.chatOpen;
-            El.chatWindow.classList.toggle('hidden', !AppState.chatOpen);
-            El.chatWindow.classList.toggle('flex', AppState.chatOpen);
-            El.chatIconOpen.classList.toggle('hidden', AppState.chatOpen);
-            El.chatIconClose.classList.toggle('hidden', !AppState.chatOpen);
-            
-            if (AppState.chatOpen && El.chatMessages.children.length === 0) {
-                addBotMessage("Hello! I am your medical assistant. Please describe your symptoms (e.g., 'I have a headache').");
-            }
+        function setupTabListeners() {
+            document.getElementById('loginTab').addEventListener('click', () => switchTab('login'));
+            document.getElementById('registerTab').addEventListener('click', () => switchTab('register'));
         }
 
-        function sendChatMessage(e) {
-            e.preventDefault();
-            const text = El.chatInput.value.trim();
-            if (!text) return;
-
-            addUserMessage(text);
-            El.chatInput.value = '';
-            
-            const typingId = showTypingIndicator();
-
-            setTimeout(() => {
-                removeTypingIndicator(typingId);
-                analyzeSymptoms(text);
-            }, 1200);
-        }
-
-        function analyzeSymptoms(text) {
-            const lowerText = text.toLowerCase();
-            let match = null;
-
-            for (const item of MedicalKB) {
-                if (item.keys.some(k => lowerText.includes(k))) {
-                    match = item;
-                    break;
-                }
-            }
-
-            if (match) {
-                addBotMessage(`It looks like a <strong>${match.condition}</strong>. Checking for doctors in <strong>${match.dept}</strong>...`, true);
-                fetchDoctorsForChat(match.dept);
-            } else {
-                addBotMessage("I couldn't identify a specific condition. I recommend visiting <strong>General Medicine</strong>.", true);
-            }
-        }
-
-        // UPDATED: Fetch doctors and render with buttons
-        async function fetchDoctorsForChat(deptName) {
-            try {
-                // Find Dept ID
-                const { data: dept, error: deptErr } = await supabaseClient
-                    .from('departments')
-                    .select('dept_id, name')
-                    .ilike('name', `%${deptName}%`)
-                    .limit(1)
-                    .single();
-
-                if (deptErr || !dept) {
-                    addBotMessage("I found the department, but couldn't retrieve details right now.");
-                    return;
-                }
-
-                // Find Doctors (Realtime will handle future updates, but we fetch fresh now)
-                const { data: doctors, error: docErr } = await supabaseClient
-                    .from('doctors')
-                    .select('name, qualification, status, current_token, last_token, doctor_id')
-                    .eq('dept_id', dept.dept_id);
-
-                if (docErr || !doctors || doctors.length === 0) {
-                    addBotMessage(`No doctors currently listed under ${dept.name}.`);
-                } else {
-                    const available = doctors.filter(d => d.status === 'available');
-                    let html = `<div class="mt-2 space-y-2">`;
-                    
-                    if (available.length > 0) {
-                        html += `<p class="text-xs text-green-700 font-semibold mb-2">${available.length} available:</p>`;
-                        available.forEach(d => {
-                            html += `
-                            <div class="bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <p class="font-bold text-sm">${d.name}</p>
-                                        <p class="text-xs text-gray-500">${d.qualification || 'Specialist'}</p>
-                                    </div>
-                                    <span class="text-xs font-bold px-2 py-1 rounded bg-green-100 text-green-700">${d.current_token || 0}</span>
-                                </div>
-                                <div class="mt-2 flex gap-2">
-                                    <button onclick="showDoctorToken('${d.doctor_id}', '${d.name}', ${d.current_token || 0}, ${d.last_token || 0}, '${d.status}')" class="flex-1 text-center text-xs bg-teal-600 text-white py-1.5 rounded-md hover:bg-teal-700 transition-colors">View Token</button>
-                                    <button onclick="redirectToDepartment('${dept.dept_id}')" class="flex-1 text-center text-xs bg-gray-200 text-gray-700 py-1.5 rounded-md hover:bg-gray-300 transition-colors">Dept Page</button>
-                                </div>
-                            </div>`;
-                        });
-                    } else {
-                         html += `<p class="text-xs text-amber-700">No doctors currently available. Check the department page for full schedule.</p>`;
-                    }
-                    
-                    // Add "Go to Department" button at the bottom
-                    html += `</div>`;
-                    html += `<button onclick="redirectToDepartment('${dept.dept_id}')" class="mt-3 w-full text-center text-xs font-semibold text-teal-700 py-2 border border-teal-200 rounded-lg hover:bg-teal-50 transition-colors">View Full Department Schedule</button>`;
-                    
-                    addBotMessage(html, true);
-                }
-            } catch (err) {
-                console.error(err);
-                addBotMessage("Error connecting to database.");
-            }
-        }
-
-        function addUserMessage(text) {
-            const div = document.createElement('div');
-            div.className = 'flex justify-end chat-message';
-            div.innerHTML = `<div class="bg-teal-600 text-white p-3 rounded-2xl rounded-br-sm shadow-sm max-w-[85%] text-sm">${text}</div>`;
-            El.chatMessages.appendChild(div);
-            scrollToBottom();
-        }
-
-        function addBotMessage(text, isHTML = false) {
-            const div = document.createElement('div');
-            div.className = 'flex gap-2 chat-message';
-            const content = isHTML ? text : `<p>${text}</p>`;
-            div.innerHTML = `
-                <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-teal-500 to-teal-700">
-                    <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v1a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
-                </div>
-                <div class="bg-white p-3 rounded-2xl rounded-bl-sm shadow-sm max-w-[85%] text-sm text-gray-700">${content}</div>`;
-            El.chatMessages.appendChild(div);
-            scrollToBottom();
-        }
-
-        function showTypingIndicator() {
-            const id = 'typing-' + Date.now();
-            const div = document.createElement('div');
-            div.id = id;
-            div.className = 'flex gap-2 chat-message';
-            div.innerHTML = `
-                <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-teal-500 to-teal-700">
-                    <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v1a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/></svg>
-                </div>
-                <div class="bg-white p-3 rounded-2xl rounded-bl-sm shadow-sm">
-                    <div class="flex gap-1">
-                        <span class="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
-                        <span class="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s;"></span>
-                        <span class="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s;"></span>
-                    </div>
-                </div>`;
-            El.chatMessages.appendChild(div);
-            scrollToBottom();
-            return id;
-        }
-
-        function removeTypingIndicator(id) { document.getElementById(id)?.remove(); }
-        function scrollToBottom() { El.chatMessages.scrollTop = El.chatMessages.scrollHeight; }
-
-        // ==========================================
-        // REDIRECT & NAVIGATION LOGIC
-        // ==========================================
-        
-        // Called from Chatbot "Dept Page" button
-        function redirectToDepartment(deptId) {
-            // 1. Close chat
-            if(AppState.chatOpen) toggleChat();
-            
-            // 2. Switch to Department Section
-            showSection('departments');
-
-            // 3. Select the specific department (Load doctors)
-            // Timeout allows UI to render section first
-            setTimeout(() => {
-                selectDept(deptId);
-                showToast('Viewing doctors for selected department');
-            }, 100);
-        }
-
-
-        // ==========================================
-        // CORE PORTAL LOGIC
-        // ==========================================
         function switchTab(tab) {
-            document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
-            document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
-            document.getElementById('loginTab').classList.toggle('bg-white', tab === 'login');
-            document.getElementById('loginTab').classList.toggle('shadow-sm', tab === 'login');
-            document.getElementById('registerTab').classList.toggle('bg-white', tab !== 'login');
-            document.getElementById('registerTab').classList.toggle('shadow-sm', tab !== 'login');
-        }
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const loginTab = document.getElementById('loginTab');
+            const registerTab = document.getElementById('registerTab');
 
-        async function handleLogin() {
-            const pid = document.getElementById('loginPatientId').value.trim().toUpperCase();
-            if (!pid) return showToast('Enter Patient ID');
-            
-            const btn = document.getElementById('loginBtn');
-            btn.innerHTML = 'Signing In...';
-            btn.disabled = true;
-
-            try {
-                const { data, error } = await supabaseClient.from('patients').select('*').eq('patient_id', pid).single();
-                if (error || !data) return showToast('Invalid Patient ID', 'error');
-                
-                AppState.currentPatient = { patientId: data.patient_id, firstName: data.first_name, lastName: data.last_name, email: data.email, phone: data.phone, dob: data.dob, gender: data.gender, bloodGroup: data.blood_group };
-                localStorage.setItem('medcare_patient', JSON.stringify(AppState.currentPatient));
-                showDashboard();
-                showToast(`Welcome, ${data.first_name}!`);
-            } catch (e) { showToast('Login failed', 'error'); } 
-            finally { btn.innerHTML = 'Sign In'; btn.disabled = false; }
-        }
-
-        function showDashboard() {
-            El.loginPage.classList.add('hidden');
-            El.dashboard.classList.remove('hidden');
-            updatePatientInfo();
-            loadDashboardData();
-            showSection('overview');
-            setupSubscriptions(); // Setup Realtime
-        }
-
-        function handleLogout() {
-            localStorage.removeItem('medcare_patient');
-            AppState.currentPatient = null;
-            El.dashboard.classList.add('hidden');
-            El.loginPage.classList.remove('hidden');
-            document.getElementById('loginPatientId').value = '';
-            showToast('Logged out');
-        }
-
-        function updatePatientInfo() {
-            const p = AppState.currentPatient;
-            if (!p) return;
-            const init = (p.firstName[0] + p.lastName[0]).toUpperCase();
-            document.getElementById('userAvatar').textContent = init;
-            document.getElementById('userName').textContent = `${p.firstName} ${p.lastName}`;
-            document.getElementById('userIdDisplay').textContent = p.patientId;
-            document.getElementById('profileAvatar').textContent = init;
-            document.getElementById('profileName').textContent = `${p.firstName} ${p.lastName}`;
-            document.getElementById('profileId').textContent = p.patientId;
-            document.getElementById('profilePhone').textContent = p.phone;
-            document.getElementById('profileEmail').textContent = p.email;
-            document.getElementById('profileBloodGroup').textContent = p.bloodGroup;
-        }
-
-        async function loadDashboardData() {
-            const pid = AppState.currentPatient.patientId;
-            const [rx, labs, meds] = await Promise.all([
-                supabaseClient.from('prescriptions').select('*').eq('patient_id', pid).order('date', { ascending: false }),
-                supabaseClient.from('lab_results').select('*').eq('patient_id', pid).order('date', { ascending: false }),
-                supabaseClient.from('medicines').select('*').eq('patient_id', pid).order('date', { ascending: false })
-            ]);
-            renderPrescriptions(rx.data || []);
-            renderLabs(labs.data || []);
-            renderMeds(meds.data || []);
-            loadRecentActivity();
-        }
-
-        function showSection(id) {
-            document.querySelectorAll('.section-content').forEach(s => s.classList.add('hidden'));
-            document.getElementById(id + 'Section').classList.remove('hidden');
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('text-teal-600', 'font-bold'));
-            document.querySelector(`.nav-item[data-section="${id}"]`)?.classList.add('text-teal-600', 'font-bold');
-        }
-
-        // ==========================================
-        // REALTIME SUBSCRIPTIONS
-        // ==========================================
-        function setupSubscriptions() {
-            const pid = AppState.currentPatient.patientId;
-            
-            // 1. Patient Data Subscriptions
-            supabaseClient.channel('rx').on('postgres_changes', { event: '*', schema: 'public', table: 'prescriptions', filter: `patient_id=eq.${pid}` }, () => { loadDashboardData(); showToast('New Prescription Added'); }).subscribe();
-            supabaseClient.channel('labs').on('postgres_changes', { event: '*', schema: 'public', table: 'lab_results', filter: `patient_id=eq.${pid}` }, () => { loadDashboardData(); showToast('New Lab Result'); }).subscribe();
-
-            // 2. Doctor Updates Subscription (Global)
-            // Listens for ANY change on doctors table and updates UI if relevant
-            supabaseClient.channel('doctors-changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'doctors' }, payload => {
-                    console.log("Doctor update received", payload);
-                    
-                    // If user is looking at a department, refresh that list
-                    if (AppState.selectedDepartment) {
-                        loadDoctorsForDept(AppState.selectedDepartment);
-                    }
-                    
-                    // If user has a specific doctor modal open, update it
-                    if (AppState.selectedDoctor && (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT')) {
-                         if (payload.new.doctor_id === AppState.selectedDoctor) {
-                             showDoctorToken(payload.new.doctor_id, payload.new.name, payload.new.current_token, payload.new.last_token, payload.new.status);
-                             showToast('Doctor status updated');
-                         }
-                    }
-                })
-                .subscribe();
-        }
-
-        // ==========================================
-        // RENDER FUNCTIONS
-        // ==========================================
-        function renderPrescriptions(data) {
-            document.getElementById('prescriptionCount').textContent = data.length;
-            document.getElementById('prescriptionsList').innerHTML = data.length ? data.map(d => `<div class="bg-white p-5 rounded-xl border"><div class="font-bold">${d.doctor_name}</div><div class="text-sm text-gray-500">${d.department}</div><div class="text-xs mt-2">${formatDate(d.date)}</div></div>`).join('') : '<div class="col-span-full text-center py-8 text-gray-400">No prescriptions</div>';
-        }
-        function renderLabs(data) {
-            document.getElementById('labCount').textContent = data.length;
-            document.getElementById('labsList').innerHTML = data.length ? data.map(d => `<div class="bg-white p-5 rounded-xl border"><div class="font-bold">${d.test_name}</div><div class="text-sm text-gray-500">${d.lab_name || 'Lab'}</div><div class="text-xs mt-2">${formatDate(d.date)}</div></div>`).join('') : '<div class="col-span-full text-center py-8 text-gray-400">No lab results</div>';
-        }
-        function renderMeds(data) {
-            document.getElementById('medicineCount').textContent = data.length;
-        }
-        async function loadRecentActivity() {
-            const pid = AppState.currentPatient.patientId;
-            const { data } = await supabaseClient.from('prescriptions').select('*').eq('patient_id', pid).order('date', { ascending: false }).limit(3);
-            const container = document.getElementById('recentActivity');
-            if (data && data.length) {
-                container.innerHTML = data.map(d => `<div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"><div class="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-teal-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div><div class="flex-1"><div class="font-medium">${d.doctor_name}</div><div class="text-xs text-gray-500">${d.department}</div></div><div class="text-xs text-gray-400">${formatDate(d.date)}</div></div>`).join('');
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                loginTab.classList.add('bg-white', 'shadow', 'text-gray-900');
+                loginTab.classList.remove('text-gray-500');
+                registerTab.classList.remove('bg-white', 'shadow', 'text-gray-900');
+                registerTab.classList.add('text-gray-500');
             } else {
-                container.innerHTML = '<div class="text-center py-8 text-gray-400">No recent activity</div>';
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                registerTab.classList.add('bg-white', 'shadow', 'text-gray-900');
+                registerTab.classList.remove('text-gray-500');
+                loginTab.classList.remove('bg-white', 'shadow', 'text-gray-900');
+                loginTab.classList.add('text-gray-500');
             }
         }
 
-        // ==========================================
-        // DEPARTMENTS & DOCTORS
-        // ==========================================
-        async function initializeDepartments() {
-            const { data } = await supabaseClient.from('departments').select('*').order('name');
-            AppState.cachedDepartments = data || []; // Cache for later use
-            const container = document.getElementById('departmentList');
-            if (data) {
-                container.innerHTML = data.map(d => `<div onclick="selectDept('${d.dept_id}')" class="bg-white p-5 rounded-xl border cursor-pointer hover:border-teal-200 transition-colors"><div class="font-bold">${d.name}</div><div class="text-sm text-gray-500">View Doctors</div></div>`).join('');
-            }
-        }
+        function switchToRegister() { switchTab('register'); }
+        function switchToLogin() { switchTab('login'); }
 
-        async function selectDept(id) {
-            AppState.selectedDepartment = id;
-            document.getElementById('departmentList').classList.add('hidden');
-            document.getElementById('doctorsSection').classList.remove('hidden');
-            await loadDoctorsForDept(id);
-        }
-
-        async function loadDoctorsForDept(id) {
-            const { data: docs } = await supabaseClient.from('doctors').select('*').eq('dept_id', id);
-            const container = document.getElementById('doctorsList');
-            
-            if (docs && docs.length) {
-                container.innerHTML = docs.map(d => `
-                    <div class="bg-white p-5 rounded-xl border cursor-pointer hover:border-teal-200 transition-all hover:shadow-md" onclick="showDoctorToken('${d.doctor_id}', '${d.name}', ${d.current_token || 0}, ${d.last_token || 0}, '${d.status}')">
-                        <div class="flex justify-between items-start">
-                            <div><div class="font-bold">${d.name}</div><div class="text-sm text-gray-500">${d.qualification || 'Specialist'}</div></div>
-                            <span class="text-xs font-bold px-2 py-1 rounded ${d.status === 'available' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${d.status}</span>
-                        </div>
-                        <div class="mt-3 flex justify-between items-center text-xs text-gray-500">
-                            <span>Current Token: <strong class="text-teal-700">${d.current_token || 0}</strong></span>
-                            <button class="text-teal-600 font-semibold hover:underline">Details</button>
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                container.innerHTML = '<div class="col-span-full text-center py-8 text-gray-400">No doctors found</div>';
-            }
-        }
-
-        function clearDeptSelection() {
-            AppState.selectedDepartment = null;
-            document.getElementById('departmentList').classList.remove('hidden');
-            document.getElementById('doctorsSection').classList.add('hidden');
-        }
-
-        // ==========================================
-        // TOKEN MODAL
-        // ==========================================
-        function showDoctorToken(id, name, current, last, status) {
-            AppState.selectedDoctor = id;
-            document.getElementById('tokenModal').classList.remove('hidden');
-            document.getElementById('tokenModalContent').innerHTML = `
-                <div class="text-center mb-6">
-                    <div class="w-20 h-20 mx-auto bg-teal-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-3">${name.split(' ').map(n=>n[0]).join('')}</div>
-                    <h4 class="font-bold text-lg">${name}</h4>
-                    <p class="text-sm text-gray-500 mt-1">Status: <span class="font-bold ${status === 'available' ? 'text-green-600' : 'text-red-600'}">${status}</span></p>
-                </div>
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div class="bg-gray-50 p-4 rounded-xl text-center"><div class="text-3xl font-bold text-teal-600" id="currentTokenDisplay">${current}</div><div class="text-xs text-gray-500">Current Token</div></div>
-                    <div class="bg-gray-50 p-4 rounded-xl text-center"><div class="text-3xl font-bold">${last}</div><div class="text-xs text-gray-500">Last Token</div></div>
-                </div>
-                <div class="p-4 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-800">
-                    <p>Current queue status. Please wait for your token number.</p>
-                </div>
-            `;
-        }
-
-        function closeTokenModal() { 
-            document.getElementById('tokenModal').classList.add('hidden'); 
-            AppState.selectedDoctor = null;
-        }
-
-        // ==========================================
-        // UTILS
-        // ==========================================
-        function formatDate(d) { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
-        function showToast(msg, type = 'success') {
-            const t = document.getElementById('toast');
-            document.getElementById('toastMessage').textContent = msg;
-            t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 3000);
-        }
-
-        // Register Logic
-        async function handleRegister() {
-            const fields = {
-                firstName: document.getElementById('regFirstName').value.trim(),
-                lastName: document.getElementById('regLastName').value.trim(),
-                email: document.getElementById('regEmail').value.trim(),
-                phone: document.getElementById('regPhone').value.trim(),
-                dob: document.getElementById('regDob').value,
-                gender: document.getElementById('regGender').value,
-                bloodGroup: document.getElementById('regBloodGroup').value,
-                address: document.getElementById('regAddress').value.trim(),
-                emergencyContact: document.getElementById('regEmergencyContact').value.trim(),
-                allergies: document.getElementById('regAllergies').value.trim()
-            };
-
-            if (!fields.firstName || !fields.lastName || !fields.email || !fields.phone || !fields.dob || !fields.gender || !fields.bloodGroup) {
-                return showToast('Please fill all required fields', 'error');
-            }
-
-            const btn = document.getElementById('registerBtn');
-            btn.innerHTML = 'Creating...';
-            btn.disabled = true;
-
-            try {
-                const patientId = generatePatientId(fields.email);
-                const { data, error } = await supabaseClient.from('patients').insert([{
-                    patient_id: patientId,
-                    first_name: fields.firstName,
-                    last_name: fields.lastName,
-                    email: fields.email,
-                    phone: fields.phone,
-                    dob: fields.dob,
-                    gender: fields.gender,
-                    blood_group: fields.bloodGroup,
-                    address: fields.address,
-                    emergency_contact: fields.emergencyContact,
-                    allergies: fields.allergies
-                }]).select();
-
-                if (error) {
-                    showToast(error.message, 'error');
-                } else {
-                    showToast('Account created!');
-                    alert(`Success! Your Patient ID is: ${patientId}`);
-                    switchTab('login');
-                    document.getElementById('loginPatientId').value = patientId;
-                }
-            } catch (err) {
-                showToast('Registration failed', 'error');
-            } finally {
-                btn.innerHTML = 'Create Account';
-                btn.disabled = false;
-            }
-        }
-        
         function generatePatientId(email) {
             let hash = 0;
             for (let i = 0; i < email.length; i++) {
@@ -798,6 +407,624 @@
             const part2 = String(Math.floor(positiveHash / 10000) % 10000).padStart(4, '0');
             return `HMS-${part1}-${part2}`;
         }
+
+        // ====================
+        // REGISTRATION
+        // ====================
+        async function handleRegister() {
+            const firstName = document.getElementById('regFirstName').value.trim();
+            const lastName = document.getElementById('regLastName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const dob = document.getElementById('regDob').value;
+            const gender = document.getElementById('regGender').value;
+            const bloodGroup = document.getElementById('regBloodGroup').value;
+            const address = document.getElementById('regAddress').value.trim();
+            const emergencyContact = document.getElementById('regEmergencyContact').value.trim();
+            const allergies = document.getElementById('regAllergies').value.trim();
+
+            if (!firstName || !lastName || !email || !phone || !dob || !gender || !bloodGroup) {
+                showToast('Please fill in all required fields');
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                showToast('Please enter a valid email address');
+                return;
+            }
+
+            const submitBtn = document.querySelector('#registerForm button[onclick="handleRegister()"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Registering...';
+            submitBtn.disabled = true;
+
+            try {
+                const patientId = generatePatientId(email);
+
+                const { data, error } = await supabaseClient
+                    .from('patients')
+                    .insert([{
+                        patient_id: patientId,
+                        first_name: firstName,
+                        last_name: lastName,
+                        email: email,
+                        phone: phone,
+                        dob: dob,
+                        gender: gender,
+                        blood_group: bloodGroup,
+                        address: address,
+                        emergency_contact: emergencyContact,
+                        allergies: allergies
+                    }])
+                    .select();
+
+                if (error) {
+                    console.error('Registration error:', error);
+                    if (error.code === '23505') {
+                        showToast('Email already registered');
+                    } else {
+                        showToast('Registration failed: ' + error.message);
+                    }
+                    return;
+                }
+
+                sendWelcomeEmail({
+                    patient_id: patientId,
+                    patient_name: `${firstName} ${lastName}`,
+                    patient_email: email,
+                    patient_phone: phone,
+                    blood_group: bloodGroup
+                }).then(() => console.log('✅ Email sent')).catch(e => console.error('Email failed:', e));
+                
+                alert(`✅ Registration Successful!\n\n🆔 Patient ID: ${patientId}\n\n📧 Check your email: ${email}`);
+                
+                switchTab('login');
+                document.getElementById('loginPatientId').value = patientId;
+
+            } catch (error) {
+                console.error('Registration error:', error);
+                showToast('Registration failed');
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // ====================
+        // LOGIN
+        // ====================
+        async function handleLogin() {
+            const patientId = document.getElementById('loginPatientId').value.trim().toUpperCase();
+            
+            if (!patientId) {
+                showToast('Please enter your Patient ID');
+                return;
+            }
+
+            const submitBtn = document.querySelector('#loginForm button[onclick="handleLogin()"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Signing In...';
+            submitBtn.disabled = true;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('patients')
+                    .select('*')
+                    .eq('patient_id', patientId)
+                    .single();
+
+                if (error || !data) {
+                    console.error('Login error:', error);
+                    showToast('Invalid Patient ID. Please check and try again.');
+                    return;
+                }
+
+                currentPatient = {
+                    patientId: data.patient_id,
+                    firstName: data.first_name,
+                    lastName: data.last_name,
+                    email: data.email,
+                    phone: data.phone,
+                    dob: data.dob,
+                    gender: data.gender,
+                    bloodGroup: data.blood_group,
+                    address: data.address,
+                    emergencyContact: data.emergency_contact,
+                    allergies: data.allergies
+                };
+
+                localStorage.setItem('medcare_patient', JSON.stringify(currentPatient));
+                showDashboard();
+                showToast(`Welcome back, ${currentPatient.firstName}!`);
+
+            } catch (error) {
+                console.error('Login error:', error);
+                showToast('Login failed. Please check your connection.');
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function sendWelcomeEmail(patientData) {
+            try {
+                const templateParams = {
+                    to_email: patientData.patient_email,
+                    patient_id: patientData.patient_id,
+                    patient_name: patientData.patient_name,
+                    patient_email: patientData.patient_email,
+                    patient_phone: patientData.patient_phone,
+                    blood_group: patientData.blood_group,
+                    registration_date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                };
+                await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+            } catch (error) { console.error('❌ Email Error:', error); }
+        }
+
+        function showDashboard() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('dashboard').classList.add('fade-in');
+            
+            updatePatientInfo();
+            loadDashboardData();
+            startRealTimeTokenUpdates();
+            showSection('overview');
+            subscribeToPatientData();
+        }
+
+        function updatePatientInfo() {
+            if (!currentPatient) return;
+            const initials = (currentPatient.firstName[0] + currentPatient.lastName[0]).toUpperCase();
+            document.getElementById('userAvatar').textContent = initials;
+            document.getElementById('userName').textContent = `${currentPatient.firstName} ${currentPatient.lastName}`;
+            document.getElementById('userIdDisplay').textContent = currentPatient.patientId;
+            document.getElementById('profileAvatar').textContent = initials;
+            document.getElementById('profileName').textContent = `${currentPatient.firstName} ${currentPatient.lastName}`;
+            document.getElementById('profileId').textContent = currentPatient.patientId;
+            document.getElementById('profilePhone').textContent = currentPatient.phone;
+            document.getElementById('profileEmail').textContent = currentPatient.email;
+            const age = calculateAge(currentPatient.dob);
+            document.getElementById('profileGenderAge').textContent = `${capitalizeFirst(currentPatient.gender)}, ${age} years`;
+            document.getElementById('profileBloodGroup').textContent = currentPatient.bloodGroup;
+        }
+
+        async function loadDashboardData() {
+            if (!currentPatient || !currentPatient.patientId) return;
+            await loadPatientRecords();
+            await loadRecentActivity();
+            await loadActiveConsultations();
+        }
+
+        async function loadPatientRecords() {
+            try {
+                const patientId = currentPatient.patientId;
+                const [rxRes, labRes, medRes] = await Promise.all([
+                    supabaseClient.from('prescriptions').select('*').eq('patient_id', patientId).order('date', { ascending: false }),
+                    supabaseClient.from('lab_results').select('*').eq('patient_id', patientId).order('date', { ascending: false }),
+                    supabaseClient.from('medicines').select('*').eq('patient_id', patientId).order('date', { ascending: false })
+                ]);
+                renderPrescriptions(rxRes.data || []);
+                renderLabResults(labRes.data || []);
+                renderMedicines(medRes.data || []);
+            } catch (error) { console.error('Error loading patient records:', error); showToast('Failed to load medical records'); }
+        }
+
+        function renderPrescriptions(prescriptions) {
+            const container = document.getElementById('prescriptionsList');
+            document.getElementById('prescriptionCount').textContent = prescriptions.length;
+            if (prescriptions.length === 0) { container.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">No prescriptions found.</div>'; return; }
+            container.innerHTML = prescriptions.map((rx, i) => `
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 card-hover slide-up" style="animation-delay: ${0.1 * i}s;">
+                    <div class="flex items-center justify-between mb-4"><div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-cyan-500 rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div><span class="text-xs text-gray-400">${formatDate(rx.date)}</span></div>
+                    <h4 class="font-bold text-gray-900 mb-1">${rx.doctor_name}</h4><p class="text-sm text-gray-500 mb-3">${rx.department}</p>
+                    <div class="text-xs text-gray-400 mb-4">Prescription ID: ${rx.prescription_id}</div>
+                    <button onclick="viewPrescription('${rx.file_url || ''}')" class="w-full py-2.5 bg-gray-50 hover:bg-cyan-50 text-cyan-600 rounded-xl font-medium text-sm transition-all">${rx.file_url ? 'View Prescription' : 'No file available'}</button>
+                </div>`).join('');
+        }
+
+        function renderLabResults(labs) {
+            const container = document.getElementById('labsList');
+            document.getElementById('labCount').textContent = labs.length;
+            if (labs.length === 0) { container.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">No lab results found.</div>'; return; }
+            container.innerHTML = labs.map((lab, i) => `
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 card-hover slide-up" style="animation-delay: ${0.1 * i}s;">
+                    <div class="flex items-center justify-between mb-4"><div class="w-12 h-12 bg-gradient-to-br from-teal-400 to-teal-500 rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6v11a4 4 0 0 1-4 4 4 4 0 0 1-4-4V3Z"/><path d="M9 3h6"/></svg></div><span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Lab Test</span></div>
+                    <h4 class="font-bold text-gray-900 mb-1">${lab.test_name}</h4><p class="text-sm text-gray-500 mb-1">${lab.lab_name || 'Laboratory'}</p><p class="text-xs text-gray-400 mb-4">${formatDate(lab.date)}</p>
+                    <button onclick="viewLabResult('${lab.file_url || ''}')" class="w-full py-2.5 bg-gray-50 hover:bg-teal-50 text-teal-600 rounded-xl font-medium text-sm transition-all">${lab.file_url ? 'View Report' : 'No file available'}</button>
+                </div>`).join('');
+        }
+
+        function renderMedicines(medicines) {
+            const container = document.getElementById('medicinesTableBody');
+            document.getElementById('medicineCount').textContent = medicines.length;
+            if (medicines.length === 0) { container.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-gray-500">No medicines found.</td></tr>'; return; }
+            container.innerHTML = medicines.map((med) => `
+                <tr class="border-b border-gray-50 hover:bg-gray-50 transition-all">
+                    <td class="py-4 px-6"><div class="font-medium text-gray-900">${med.name}</div></td>
+                    <td class="py-4 px-6 text-gray-600">${med.dosage || 'As prescribed'}</td>
+                    <td class="py-4 px-6 text-gray-600">${med.quantity || 'N/A'}</td>
+                    <td class="py-4 px-6 text-gray-500 text-sm">${formatDate(med.date)}</td>
+                    <td class="py-4 px-6"><span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Issued</span></td>
+                </tr>`).join('');
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`${section}Section`).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-cyan-50', 'text-cyan-600', 'bg-gray-100');
+                if (btn.dataset.section === section) btn.classList.add('bg-cyan-50', 'text-cyan-600');
+            });
+        }
+
+        // ====================
+        // DEPARTMENTS
+        // ====================
+        async function initializeDepartments() {
+            try {
+                const { data: departments, error } = await supabaseClient.from('departments').select('*').order('name', { ascending: true });
+                if (!error && departments && departments.length > 0) renderDepartments(departments);
+                else document.getElementById('departmentList').innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">No departments available.</div>';
+            } catch (error) { console.error('Error loading departments:', error); }
+        }
+
+        function renderDepartments(departments) {
+            const container = document.getElementById('departmentList');
+            const departmentStyles = {
+                'Cardiology': { icon: 'heart', color: 'from-rose-500 to-pink-500' },
+                'Neurology': { icon: 'brain', color: 'from-purple-500 to-violet-500' },
+                'Orthopedics': { icon: 'bone', color: 'from-amber-500 to-orange-500' },
+                'Pediatrics': { icon: 'baby', color: 'from-cyan-500 to-teal-500' },
+                'Dermatology': { icon: 'skin', color: 'from-pink-500 to-rose-500' },
+                'Ophthalmology': { icon: 'eye', color: 'from-blue-500 to-indigo-500' },
+                'ENT': { icon: 'ear', color: 'from-emerald-500 to-green-500' },
+                'Gynecology': { icon: 'female', color: 'from-fuchsia-500 to-pink-500' },
+                'Urology': { icon: 'kidney', color: 'from-red-500 to-rose-500' },
+                'Psychiatry': { icon: 'mind', color: 'from-indigo-500 to-purple-500' },
+                'Oncology': { icon: 'cancer', color: 'from-violet-500 to-purple-500' },
+                'General Medicine': { icon: 'stethoscope', color: 'from-teal-500 to-cyan-500' }
+            };
+            container.innerHTML = departments.map(dept => {
+                const style = departmentStyles[dept.name] || { icon: 'stethoscope', color: 'from-teal-500 to-cyan-500' };
+                return `<div onclick="selectDepartment('${dept.dept_id}')" class="bg-white rounded-2xl p-5 cursor-pointer card-hover border border-gray-100 group">
+                    <div class="w-14 h-14 bg-gradient-to-br ${style.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">${getDepartmentIcon(style.icon)}</div>
+                    <h4 class="font-bold text-gray-900 mb-1">${dept.name}</h4><p class="text-sm text-gray-500">View Doctors</p>
+                </div>`;
+            }).join('');
+        }
+
+        function getDepartmentIcon(type) {
+            const icons = {
+                heart: '<svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+                brain: '<svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M12 18v-5.5"/></svg>',
+                bone: '<svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 10c.7-.7 1.69 0 2.5 0a2.5 2.5 0 1 0 0-5 .5.5 0 0 1-.5-.5 2.5 2.5 0 1 0-5 0c0 .81.7 1.8 0 2.5l-7 7c-.7.7-1.69 0-2.5 0a2.5 2.5 0 0 0 0 5c.28 0 .5.22.5.5a2.5 2.5 0 1 0 5 0c0-.81-.7-1.8 0-2.5Z"/></svg>',
+                baby: '<svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>',
+                skin: '<svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>',
+                eye: '<svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',
+                ear: '<svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8.5a6.5 6.5 0 1 1 13 0c0 6-6 6-6 10.5"/><path d="M15 8.5a2.5 2.5 0 0 0-5 0v1a2 2 0 0 0 4 0"/></svg>',
+                female: '<svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M12 13v8"/><path d="m9 18 6 0"/></svg>',
+                kidney: '<svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v6"/><path d="M6.5 9a4.5 4.5 0 0 0 0 9c2.5 0 5.5 0 5.5-4.5V9c0-4.5 3-4.5 5.5-4.5a4.5 4.5 0 0 1 0 9c-2.5 0-5.5 0-5.5 4.5"/></svg>',
+                mind: '<svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
+                cancer: '<svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M3 7a5 5 0 0 0 5 5 5 5 0 0 0-5 5"/><path d="M21 7a5 5 0 0 1-5 5 5 5 0 0 1 5 5"/></svg>',
+                stethoscope: '<svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-.3a.3.3 0 1 0 .2.5"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>'
+            };
+            return icons[type] || icons.stethoscope;
+        }
+
+        async function selectDepartment(deptId) {
+            selectedDepartment = deptId;
+            document.getElementById('departmentList').classList.add('hidden');
+            document.getElementById('doctorsSection').classList.remove('hidden');
+            try {
+                const { data: dept } = await supabaseClient.from('departments').select('name').eq('dept_id', deptId).single();
+                if (dept) document.getElementById('selectedDepartmentName').textContent = dept.name;
+            } catch (error) { console.error('Error fetching department name:', error); }
+            loadDoctors(deptId);
+        }
+
+        function clearDepartmentSelection() {
+            selectedDepartment = null;
+            document.getElementById('departmentList').classList.remove('hidden');
+            document.getElementById('doctorsSection').classList.add('hidden');
+        }
+
+        async function loadDoctors(deptId) {
+            try {
+                const { data: doctors, error } = await supabaseClient.from('doctors').select('*').eq('dept_id', deptId).order('name', { ascending: true });
+                if (!error && doctors && doctors.length > 0) renderDoctors(doctors);
+                else document.getElementById('doctorsList').innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">No doctors found in this department.</div>';
+            } catch (error) { console.error('Error loading doctors:', error); showToast('Failed to load doctors'); }
+        }
+
+        function renderDoctors(doctors) {
+            const container = document.getElementById('doctorsList');
+            container.innerHTML = doctors.map(doctor => `
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 card-hover cursor-pointer" onclick="showDoctorToken('${doctor.doctor_id}', '${doctor.name}', ${doctor.current_token || 0}, ${doctor.last_token || 0}, '${doctor.status || 'available'}')">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="w-14 h-14 bg-gradient-to-br from-cyan-400 to-cyan-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">${doctor.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
+                        <div class="flex-1"><h4 class="font-bold text-gray-900">${doctor.name}</h4><p class="text-sm text-gray-500">${doctor.qualification || 'MBBS'}</p></div>
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusClass(doctor.status || 'available')}">${capitalizeFirst(doctor.status || 'available')}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-gray-50 rounded-xl p-3 text-center"><div class="text-2xl font-bold text-cyan-600">${doctor.current_token || 0}</div><div class="text-xs text-gray-500">Current Token</div></div>
+                        <div class="bg-gray-50 rounded-xl p-3 text-center"><div class="text-2xl font-bold text-gray-900">${doctor.last_token || 0}</div><div class="text-xs text-gray-500">Last Token</div></div>
+                    </div>
+                    <button class="w-full mt-4 py-2.5 bg-gray-50 hover:bg-cyan-50 text-cyan-600 rounded-xl font-medium text-sm transition-all">View Live Status</button>
+                </div>`).join('');
+        }
+
+        // ====================
+        // DOCTOR TOKEN MODAL
+        // ====================
+        function showDoctorToken(doctorId, doctorName, currentToken, lastToken, status) {
+            selectedDoctor = doctorId;
+            const modal = document.getElementById('tokenModal');
+            modal.classList.remove('hidden');
+            const initials = doctorName.split(' ').map(n => n[0]).join('').slice(0, 2);
+            document.getElementById('tokenModalContent').innerHTML = `
+                <div class="text-center mb-6"><div class="w-20 h-20 bg-gradient-to-br from-cyan-400 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-2xl mx-auto mb-3">${initials}</div><h4 class="font-bold text-lg">${doctorName}</h4><p class="text-sm text-gray-500">Consultant Doctor</p></div>
+                <div class="flex items-center justify-center gap-2 mb-6"><span class="w-3 h-3 rounded-full ${status === 'available' ? 'bg-green-500 pulse-dot' : 'bg-red-500'}"></span><span class="font-medium ${status === 'available' ? 'text-green-600' : 'text-red-600'}">${capitalizeFirst(status)}</span></div>
+                <div class="bg-gradient-to-br from-cyan-50 to-teal-50 rounded-2xl p-6 mb-6"><div class="grid grid-cols-2 gap-6 text-center"><div><div class="text-4xl font-bold text-cyan-600" id="currentTokenDisplay">${currentToken}</div><div class="text-sm text-gray-500 mt-1">Current Token</div></div><div><div class="text-4xl font-bold text-gray-900">${lastToken}</div><div class="text-sm text-gray-500 mt-1">Last Token Issued</div></div></div></div>
+                <div class="space-y-3"><div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl"><span class="text-gray-600">Estimated Wait</span><span class="font-semibold">${currentToken > 0 && lastToken > currentToken ? `${(lastToken - currentToken) * 10} min` : 'No wait'}</span></div><div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl"><span class="text-gray-600">Tokens Available</span><span class="font-semibold text-green-600">${Math.max(0, 30 - lastToken)} remaining</span></div></div>
+                <div class="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl"><p class="text-sm text-amber-800"><strong>Note:</strong> Token numbers are updated in real-time. Please arrive when your token is near.</p></div>`;
+        }
+
+        function closeTokenModal() { document.getElementById('tokenModal').classList.add('hidden'); selectedDoctor = null; }
+
+        // ====================
+        // REAL-TIME UPDATES
+        // ====================
+        function startRealTimeTokenUpdates() {
+            tokenSubscription = supabaseClient.channel('doctor_tokens').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'doctors' }, (payload) => {
+                if (selectedDoctor && payload.new.doctor_id === selectedDoctor) {
+                    const currentToken = document.getElementById('currentTokenDisplay');
+                    if (currentToken) { currentToken.textContent = payload.new.current_token; currentToken.classList.add('token-update'); setTimeout(() => currentToken.classList.remove('token-update'), 500); }
+                }
+                loadActiveConsultations();
+            }).subscribe();
+        }
+
+        function subscribeToPatientData() {
+            if (!currentPatient) return;
+            const pid = currentPatient.patientId;
+            supabaseClient.channel('patient_changes_' + pid).on('postgres_changes', { event: '*', schema: 'public', table: 'prescriptions', filter: `patient_id=eq.${pid}` }, () => { loadPatientRecords(); loadRecentActivity(); showToast('New prescription added'); }).subscribe();
+            supabaseClient.channel('patient_labs_' + pid).on('postgres_changes', { event: '*', schema: 'public', table: 'lab_results', filter: `patient_id=eq.${pid}` }, () => { loadPatientRecords(); loadRecentActivity(); showToast('New lab result available'); }).subscribe();
+            supabaseClient.channel('patient_meds_' + pid).on('postgres_changes', { event: '*', schema: 'public', table: 'medicines', filter: `patient_id=eq.${pid}` }, () => { loadPatientRecords(); loadRecentActivity(); }).subscribe();
+            
+            // Realtime subscription for doctors table to update chatbot if open
+            doctorSubscription = supabaseClient.channel('doctors_realtime').on('postgres_changes', { event: '*', schema: 'public', table: 'doctors' }, () => {
+                console.log("Doctors list updated via realtime");
+                // If chatbot is in a doctor list context, it will auto-update on next query, but we can force a refresh of active consultations here
+                loadActiveConsultations();
+            }).subscribe();
+        }
+
+        async function loadRecentActivity() {
+            if (!currentPatient || !currentPatient.patientId) return;
+            try {
+                const activities = [];
+                const { data: prescriptions } = await supabaseClient.from('prescriptions').select('*').eq('patient_id', currentPatient.patientId).order('date', { ascending: false }).limit(5);
+                if (prescriptions) prescriptions.forEach(rx => activities.push({ type: 'prescription', title: 'Prescription Added', desc: `${rx.doctor_name} - ${rx.department}`, date: rx.date, icon: 'file-text' }));
+                const { data: labs } = await supabaseClient.from('lab_results').select('*').eq('patient_id', currentPatient.patientId).order('date', { ascending: false }).limit(5);
+                if (labs) labs.forEach(lab => activities.push({ type: 'lab', title: 'Lab Result Uploaded', desc: lab.test_name, date: lab.date, icon: 'test-tube' }));
+                const { data: medicines } = await supabaseClient.from('medicines').select('*').eq('patient_id', currentPatient.patientId).order('date', { ascending: false }).limit(5);
+                if (medicines) medicines.forEach(med => activities.push({ type: 'medicine', title: 'Medicine Dispensed', desc: `${med.name} - ${med.quantity || ''}`, date: med.date, icon: 'pill' }));
+                activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+                renderRecentActivity(activities.slice(0, 5));
+            } catch (error) { console.error('Error loading recent activity:', error); renderRecentActivity([]); }
+        }
+
+        function renderRecentActivity(activities) {
+            const container = document.getElementById('recentActivity');
+            if (activities.length === 0) { container.innerHTML = '<div class="text-center py-8 text-gray-500"><svg class="w-12 h-12 mx-auto mb-3 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><p class="text-sm">No recent activity found</p><p class="text-xs text-gray-400 mt-1">Your medical activities will appear here</p></div>'; return; }
+            container.innerHTML = activities.map((activity, i) => `
+                <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-xl slide-up" style="animation-delay: ${0.1 * i}s;">
+                    <div class="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">${getActivityIcon(activity.icon)}</div>
+                    <div class="flex-1 min-w-0"><div class="font-medium text-gray-900">${activity.title}</div><div class="text-sm text-gray-500 truncate">${activity.desc}</div></div>
+                    <div class="text-xs text-gray-400 flex-shrink-0">${formatDate(activity.date)}</div>
+                </div>`).join('');
+        }
+
+        function getActivityIcon(type) {
+            const icons = {
+                'file-text': '<svg class="w-5 h-5 text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>',
+                'test-tube': '<svg class="w-5 h-5 text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6v11a4 4 0 0 1-4 4 4 4 0 0 1-4-4V3Z"/><path d="M9 3h6"/></svg>',
+                'pill': '<svg class="w-5 h-5 text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>',
+                'stethoscope': '<svg class="w-5 h-5 text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-.3a.3.3 0 1 0 .2.5"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>'
+            };
+            return icons[type] || icons['file-text'];
+        }
+
+        async function loadActiveConsultations() {
+            try {
+                const { data: doctors, error } = await supabaseClient.from('doctors').select('*, departments(name)').eq('status', 'available').gt('current_token', 0).gt('last_token', 0).order('current_token', { ascending: false }).limit(3);
+                if (!error && doctors && doctors.length > 0) renderActiveConsultations(doctors);
+                else renderActiveConsultations([]);
+            } catch (error) { console.error('Error loading active consultations:', error); renderActiveConsultations([]); }
+        }
+
+        function renderActiveConsultations(doctors) {
+            const container = document.getElementById('activeConsultations');
+            if (doctors.length === 0) { container.innerHTML = '<div class="text-center py-8 text-gray-500"><svg class="w-12 h-12 mx-auto mb-3 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><p class="text-sm">No active consultations</p><p class="text-xs text-gray-400 mt-1">Visit departments to view doctor availability</p></div>'; return; }
+            container.innerHTML = doctors.map((doc, i) => {
+                const tokensRemaining = doc.last_token - doc.current_token;
+                const isNearToken = tokensRemaining <= 5;
+                const deptName = doc.departments?.name || 'General';
+                return `<div class="flex items-center gap-4 p-4 border border-gray-100 rounded-xl slide-up hover:border-cyan-200 transition-all cursor-pointer" style="animation-delay: ${0.1 * i}s;" onclick="showDoctorToken('${doc.doctor_id}', '${doc.name}', ${doc.current_token}, ${doc.last_token}, '${doc.status}')">
+                    <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-cyan-500 rounded-xl flex items-center justify-center text-white font-bold">${doc.current_token}</div>
+                    <div class="flex-1"><div class="font-medium text-gray-900">${doc.name}</div><div class="text-sm text-gray-500">${deptName}</div></div>
+                    <div class="text-right"><span class="px-3 py-1 rounded-full text-xs font-semibold ${isNearToken ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}">${isNearToken ? 'Soon' : `${tokensRemaining} waiting`}</span><div class="text-xs text-gray-400 mt-1">Token ${doc.current_token} / ${doc.last_token}</div></div>
+                </div>`;
+            }).join('');
+        }
+
+        function viewPrescription(fileUrl) { if (fileUrl) window.open(fileUrl, '_blank'); else showToast('File not available'); }
+        function viewLabResult(fileUrl) { if (fileUrl) window.open(fileUrl, '_blank'); else showToast('File not available'); }
+
+        function handleLogout() {
+            localStorage.removeItem('medcare_patient');
+            if (tokenSubscription) supabaseClient.removeChannel(tokenSubscription);
+            if (doctorSubscription) supabaseClient.removeChannel(doctorSubscription);
+            currentPatient = null;
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('loginPatientId').value = '';
+            showToast('Logged out successfully');
+        }
+
+        // ====================
+        // CHATBOT LOGIC
+        // ====================
+        function setupChatbot() {
+            const form = document.getElementById('chat-form');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const input = document.getElementById('chat-input');
+                const text = input.value.trim();
+                if (text) {
+                    addChatMessage(text, 'user');
+                    input.value = '';
+                    processSymptoms(text);
+                }
+            });
+        }
+
+        function toggleChatbot() {
+            const chatWindow = document.getElementById('chat-window');
+            const btn = document.getElementById('chat-toggle-btn');
+            const iconOpen = document.getElementById('chat-icon-open');
+            const iconClose = document.getElementById('chat-icon-close');
+            const isHidden = chatWindow.style.display === 'none' || chatWindow.style.display === '';
+            
+            if (isHidden) {
+                chatWindow.style.display = 'flex';
+                iconOpen.classList.add('hidden');
+                iconClose.classList.remove('hidden');
+                if (document.getElementById('chat-body').innerHTML === '') {
+                    addChatMessage("Hello! I am MedAssist. Describe your symptoms, and I'll find the right doctor for you.", 'bot');
+                }
+            } else {
+                chatWindow.style.display = 'none';
+                iconOpen.classList.remove('hidden');
+                iconClose.classList.add('hidden');
+            }
+        }
+
+        function addChatMessage(text, sender) {
+            const body = document.getElementById('chat-body');
+            const div = document.createElement('div');
+            div.className = `chat-message ${sender === 'user' ? 'user-msg' : 'bot-msg'}`;
+            div.innerHTML = text;
+            body.appendChild(div);
+            body.scrollTop = body.scrollHeight;
+        }
+
+        function showTyping() {
+            const body = document.getElementById('chat-body');
+            const div = document.createElement('div');
+            div.className = 'typing-indicator';
+            div.id = 'typing-loader';
+            div.innerHTML = '<span></span><span></span><span></span>';
+            body.appendChild(div);
+            body.scrollTop = body.scrollHeight;
+        }
+
+        function hideTyping() { document.getElementById('typing-loader')?.remove(); }
+
+        async function processSymptoms(text) {
+            showTyping();
+            
+            // Simulate analysis delay
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            const lowerText = text.toLowerCase();
+            let matched = null;
+
+            // Find matching department
+            for (const item of medicalKnowledge) {
+                if (item.keywords.some(k => lowerText.includes(k))) {
+                    matched = item;
+                    break;
+                }
+            }
+
+            hideTyping();
+
+            if (matched) {
+                addChatMessage(`It seems you might have a <strong>${matched.condition}</strong>. I'll check for available doctors in <strong>${matched.dept}</strong>.`, 'bot');
+                showTyping();
+                await fetchDoctorsForChat(matched.dept);
+                hideTyping();
+            } else {
+                addChatMessage("I'm sorry, I couldn't identify the specific condition. I recommend visiting <strong>General Medicine</strong> or describing your symptoms in more detail (e.g., 'chest pain', 'headache', 'skin rash').", 'bot');
+            }
+        }
+
+        async function fetchDoctorsForChat(deptName) {
+            try {
+                // 1. Find Dept ID
+                const { data: dept, error: deptErr } = await supabaseClient.from('departments').select('dept_id, name').ilike('name', `%${deptName}%`).limit(1).single();
+                
+                if (deptErr || !dept) {
+                    hideTyping();
+                    addChatMessage("I found the condition, but couldn't locate the department. Please check the Departments tab.", 'bot');
+                    return;
+                }
+
+                // 2. Find Doctors
+                const { data: doctors, error: docErr } = await supabaseClient.from('doctors').select('*').eq('dept_id', dept.dept_id);
+
+                hideTyping();
+
+                if (docErr || !doctors || doctors.length === 0) {
+                    addChatMessage(`There are currently no doctors listed under ${dept.name}. Please check back later.`, 'bot');
+                } else {
+                    const available = doctors.filter(d => d.status === 'available');
+                    let html = `<div><strong>${dept.name} Doctors:</strong><br><span class="text-xs text-gray-500">${available.length} currently available</span></div>`;
+                    
+                    doctors.forEach(d => {
+                        html += `<div class="doc-card-chat">
+                            <div class="flex justify-between items-center mb-2">
+                                <div><strong>${d.name}</strong><br><span class="text-xs text-gray-500">${d.qualification || 'Specialist'}</span></div>
+                                <span class="text-xs font-bold px-2 py-1 rounded ${d.status === 'available' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">${d.status}</span>
+                            </div>
+                            <div class="flex gap-2 mt-2">
+                                <button onclick="showDoctorToken('${d.doctor_id}', '${d.name}', ${d.current_token || 0}, ${d.last_token || 0}, '${d.status}')" class="flex-1 text-center text-xs bg-cyan-600 text-white py-1.5 rounded hover:bg-cyan-700 transition-colors">View Token</button>
+                                <button onclick="redirectToDepartment('${dept.dept_id}')" class="flex-1 text-center text-xs bg-gray-200 text-gray-700 py-1.5 rounded hover:bg-gray-300 transition-colors">Dept Page</button>
+                            </div>
+                        </div>`;
+                    });
+                    
+                    addChatMessage(html, 'bot');
+                }
+            } catch (err) {
+                console.error(err);
+                addChatMessage("Error connecting to the database. Please try again.", 'bot');
+            }
+        }
+
+        function redirectToDepartment(deptId) {
+            // Close chatbot
+            document.getElementById('chat-window').style.display = 'none';
+            document.getElementById('chat-icon-open').classList.remove('hidden');
+            document.getElementById('chat-icon-close').classList.add('hidden');
+
+            // Navigate UI
+            showSection('departments');
+            selectDepartment(deptId);
+            showToast('Viewing department doctors');
+        }
+
+        // ====================
+        // UTILITY FUNCTIONS
+        // ====================
+        function validateEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+        function calculateAge(dob) { const today = new Date(); const birthDate = new Date(dob); let age = today.getFullYear() - birthDate.getFullYear(); const monthDiff = today.getMonth() - birthDate.getMonth(); if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--; return age; }
+        function capitalizeFirst(str) { if (!str) return ''; return str.charAt(0).toUpperCase() + str.slice(1); }
+        function formatDate(dateStr) { const date = new Date(dateStr); return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+        function showToast(message) { const toast = document.getElementById('toast'); document.getElementById('toastMessage').textContent = message; toast.classList.remove('translate-y-20', 'opacity-0'); setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000); }
+        function getStatusClass(status) { const classes = { available: 'bg-green-100 text-green-700', emergency: 'bg-red-100 text-red-700 status-badge', break: 'bg-amber-100 text-amber-700', offline: 'bg-gray-100 text-gray-600' }; return classes[status] || classes.offline; }
     </script>
 </body>
 </html>
